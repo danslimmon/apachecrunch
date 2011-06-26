@@ -237,3 +237,22 @@ class LogParser
         end
     end
 end
+
+# Makes a LogParser given the parameters we want to work with.
+#
+# This is the class that most external code should instatiate to begin using this library.
+class LogParserFactory
+    # Returns a new LogParser instance for the given log file, which should have the given Apache
+    # log format.
+    def self.log_parser(format_string, path)
+        # First we generate a LogFormat instance based on the format string we were given
+        format_factory = LogFormatFactory.new
+        log_format = format_factory.from_format_string(format_string)
+
+        # Now we generate a line parser
+        log_line_parser = LogLineParser.new(log_format)
+
+        # And now we can instantiate and return a LogParser
+        return LogParser.new(path, log_line_parser)
+    end
+end
