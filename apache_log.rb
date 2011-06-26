@@ -1,3 +1,5 @@
+require "date"
+
 # An element in a log format
 #
 # Exposes:
@@ -64,6 +66,17 @@ class CLFIntegerCast
 end
 
 
+# Converts a string formatted in Apache's wack-ass timestamp format to a 
+class DatetimeCast
+    @@MONTH_MAP = {"Jan" => 1, "Feb" => 2, "Mar" => 3, "Apr" => 4, "May" => 5, "Jun" => 6,
+                   "Jul" => 7, "Aug" => 8, "Sep" => 9, "Oct" => 10, "Nov" => 11, "Dec" => 12}
+    def self.cast(string_value)
+        string_value =~ Regexp.compile(%q!^\[(\d\d)/([A-Za-z]{3})/(\d\d\d\d):(\d\d):(\d\d):(\d\d) (-?\d\d\d\d)\]$!)
+        DateTime.civil($3.to_i, @@MONTH_MAP[$2], $1.to_i, $4.to_i, $5.to_i, $6.to_i)
+    end
+end
+
+
 # Generates LogFormatElement instances
 class LogFormatElementFactory
     @@ABBREV_MAP = {
@@ -72,7 +85,7 @@ class LogFormatElementFactory
         "%u" => LogFormatElement.new("%h", "remote_user", %q![^:]+!),
         "%t" => LogFormatElement.new("%t", "time", %q!\[\d\d/[A-Za-z]{3}/\d\d\d\d:\d\d:\d\d:\d\d -?\d\d\d\d\]!),
         "%r" => LogFormatElement.new("%r", "req_firstline", %q![^"]+!),
-        "%s" => LogFormatElement.new("%s", "status", %q!\d+!),
+        "%s" => LogFormatElement.new("%s", "status", %q!\d+|-!),
         "%B" => LogFormatElement.new("%b", "bytes_sent", %q!\d+!, caster=IntegerCast),
         "%b" => LogFormatElement.new("%b", "bytes_sent", %q![\d-]+!, caster=CLFIntegerCast)
     }
