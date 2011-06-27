@@ -1,4 +1,5 @@
 require "date"
+require "tempfile"
 
 # An element in a log format
 #
@@ -213,7 +214,7 @@ class LogLineParser
             return nil
         end
 
-        line_hash = {}
+        line_hash = {"text" => log_text}
         @_elements.each_with_index do |element, i|
             line_hash[element.name] = element.cast(Regexp.last_match(i + 1))
         end
@@ -236,7 +237,11 @@ class LogParser
     #
     # The keys of the hash are names of LogFormatElements (e.g. "remote_host", "reqheader_referer")
     def next_entry
-        @_file = open(@path) if @_file.nil?
+#        @_file = open(@path) if @_file.nil?
+        #        @DEBUG
+        if @_file.nil?
+            @_file = open(@path)
+        end
 
         while line_text = @_file.gets
             return nil if line_text.nil?
@@ -248,6 +253,26 @@ class LogParser
 
             return logline
         end
+    end
+
+    # Resets the LogParser's filehandle so we can start over.
+    def reset
+        @_file = nil
+    end
+
+    # Returns a file object whose contents will replace those of the log file when replace() is
+    # called
+    def begin_replacement
+        @_rep_file = Tempfile.new("apache_log_parser")
+    end
+
+    # Replaces the file we're parsing with the contents of the replacement file returned by
+    # begin_replacement()
+    def replace
+        path = @_file.path
+        @_file = nil
+        @_rep_file.close
+        File.rename(@_rep_file.path, path)
     end
 end
 
