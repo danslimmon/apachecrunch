@@ -120,6 +120,7 @@ class LogFormat
 
     def initialize
         @tokens = []
+        @_regex = nil
     end
 
     # Appends a given token (a LogFormatElement or LogFormatString) to the tokens list
@@ -127,8 +128,10 @@ class LogFormat
         @tokens << token
     end
 
-    # Returns a string that can serve as a regex to match a log line in this format
+    # Returns a compiled regex to match a log line in this format
     def regex
+        return @_regex unless @_regex.nil?
+
         r = "^"
         @tokens.each do |tok|
             # We only care to remember the LogFormatElements.  No need to put parentheses
@@ -140,7 +143,9 @@ class LogFormat
             end
         end
         r += "$"
-        r
+
+        @_regex = Regexp.compile(r)
+        @_regex
     end
 
     # Returns the list of LogFormatElements, in order, of the interpolated things in the format.
@@ -208,7 +213,7 @@ class LogLineParser
     #
     # The keys of the hash are names of LogFormatElements (e.g. "remote_host", "reqheader_referer")
     def from_text(log_text)
-        match = (log_text =~ Regexp.compile(@log_format.regex))
+        match = (log_text =~ @log_format.regex)
         if match.nil?
             warn "Log line did not match expected format: #{log_text}"
             return nil
@@ -237,11 +242,7 @@ class LogParser
     #
     # The keys of the hash are names of LogFormatElements (e.g. "remote_host", "reqheader_referer")
     def next_entry
-#        @_file = open(@path) if @_file.nil?
-        #        @DEBUG
-        if @_file.nil?
-            @_file = open(@path)
-        end
+        @_file = open(@path) if @_file.nil?
 
         while line_text = @_file.gets
             return nil if line_text.nil?
@@ -292,5 +293,20 @@ class LogParserFactory
 
         # And now we can instantiate and return a LogParser
         return LogParser.new(path, log_line_parser)
+    end
+end
+
+
+# Finds a named log format string in the configuration file(s)
+class FormatStringFinder
+    # Finds the given format string in the configuration file(s)
+    #
+    # If none exists, returns nil.
+    def find(format_name)
+        config_file = open("log_formats.rb")
+        formats = {}
+        eval config_file.read
+
+        return formats[format_name.to_sym].gsub(/\\"/, '"')
     end
 end
