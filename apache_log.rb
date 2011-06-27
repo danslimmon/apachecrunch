@@ -72,7 +72,7 @@ class LogFormatElementFactory
     @@ABBREV_MAP = {
         "%h" => LogFormatElement.new("%h", "remote_host", %q![A-Za-z0-9.-]+!),
         "%l" => LogFormatElement.new("%l", "log_name", %q!\S+!),
-        "%u" => LogFormatElement.new("%h", "remote_user", %q![^:]+!),
+        "%u" => LogFormatElement.new("%u", "remote_user", %q![^:]+!),
         "%t" => LogFormatElement.new("%t", "time", %q!\[\d\d/[A-Za-z]{3}/\d\d\d\d:\d\d:\d\d:\d\d -?\d\d\d\d\]!),
         "%r" => LogFormatElement.new("%r", "req_firstline", %q![^"]+!),
         "%s" => LogFormatElement.new("%s", "status", %q!\d+|-!),
