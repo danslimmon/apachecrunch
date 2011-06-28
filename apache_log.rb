@@ -299,14 +299,32 @@ end
 
 # Finds a named log format string in the configuration file(s)
 class FormatStringFinder
+    @@FILE_NAME = "log_formats.rb"
+
     # Finds the given format string in the configuration file(s)
     #
     # If none exists, returns nil.
     def find(format_name)
-        config_file = open("log_formats.rb")
+        name_as_symbol = format_name.to_sym
         formats = {}
-        eval config_file.read
+        _search_path.each do |dir|
+            config_path = File.join(dir, @@FILE_NAME)
+            if File.readable?(config_path)
+                config_file = open(File.join(dir, @@FILE_NAME))
+                eval config_file.read
+            end
 
-        return formats[format_name.to_sym].gsub(/\\"/, '"')
+            if formats.key?(format_name.to_sym)
+                return formats[format_name.to_sym].gsub(/\\"/, '"')
+            end
+        end
+
+        raise "Failed to find the format '#{format_name}' in the search path: #{_search_path.inspect}"
+    end
+
+    def _search_path
+        [".",
+         File.join(ENV["HOME"], ".apachecrunch"),
+         "/etc/apachecrunch"]
     end
 end
