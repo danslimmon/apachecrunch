@@ -127,6 +127,39 @@ class Distribution < ProcedureRoutine
 end
 
 
+# Same as Distribution, but the buckets get expenentially wider
+class LogDistribution < ProcedureRoutine
+    def execute(width_base, &blk)
+        dist = {}
+        while @_current_entry = @_log_parser.next_entry
+            val = instance_eval(&blk)
+            k = _key_for(val, width_base)
+            if dist.key?(k)
+                dist[k] += 1
+            else
+                dist[k] = 1
+            end
+        end
+
+        # Backfill keys for which we didn't find a value
+        k = dist.keys.min
+        max_key = dist.keys.max
+        while k *= width_base and k < max_key
+            dist[k] = 0 unless dist.key?(k)
+        end
+
+        dist
+    end
+
+    # Determines the key for the distribution hash given the value and logarithmic base for
+    # the bucket width
+    def _key_for(val, width_base)
+        exp = (Math.log(val) / Math.log(width_base)).to_i
+        width_base ** exp
+    end
+end
+
+
 # DSL routine that determines a confidence interval for the values to which the block evaluates
 #
 # For example,
@@ -204,6 +237,14 @@ class ProcedureEnvironment
     def distribution(bucket_width, &blk)
         routine = Distribution.new(@_log_parser)
         rv = routine.execute(bucket_width, &blk)
+        routine.finish
+        rv
+    end
+
+    # DSL routine 'log_distribution'
+    def log_distribution(width_base, &blk)
+        routine = LogDistribution.new(@_log_parser)
+        rv = routine.execute(width_base, &blk)
         routine.finish
         rv
     end
