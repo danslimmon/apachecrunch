@@ -77,7 +77,8 @@ class LogFormatElementFactory
         "%r" => LogFormatElement.new("%r", "req_firstline", %q![^"]+!),
         "%s" => LogFormatElement.new("%s", "status", %q!\d+|-!),
         "%B" => LogFormatElement.new("%b", "bytes_sent", %q!\d+!, caster=IntegerCast),
-        "%b" => LogFormatElement.new("%b", "bytes_sent", %q![\d-]+!, caster=CLFIntegerCast)
+        "%b" => LogFormatElement.new("%b", "bytes_sent", %q![\d-]+!, caster=CLFIntegerCast),
+        "%D" => LogFormatElement.new("%D", "serve_time_ms", %q!\d+!, caster=IntegerCast)
     }
 
     # Takes an Apache log format abbreviation and returns a corresponding LogFormatElement
