@@ -89,16 +89,26 @@ class LogFormatElementFactory
         elsif abbrev =~ /^%\{([A-Za-z0-9-]+)\}i/
             # HTTP request header
             return _reqheader_element(abbrev, $1)
+        elsif abbrev =~ /^%\{(.*?):([^}]+)\}r/
+            # Arbitrary regex
+            return _regex_element(abbrev, $1, $2)
         end
+
+        raise "Unknown element format '#{abbrev}'"
     end
 
     # Returns a LogFormatElement based on an HTTP header
     def _reqheader_element(abbrev, header_name)
-        LogFormatElement.new(abbrev, _reqheader_name_to_element_name(header_name), %q![^"]*!)
+        LogFormatElement.new(abbrev, _header_name_to_element_name(header_name), %q![^"]*!)
+    end
+
+    # Returns a LogFormatElement based on an arbitrary regex
+    def _regex_element(abbrev, regex_name, regex)
+        LogFormatElement.new(abbrev, "regex_#{regex_name}", regex)
     end
 
     # Lowercases header name and turns hyphens into underscores
-    def _reqheader_name_to_element_name(header_name)
+    def _header_name_to_element_name(header_name)
         "reqheader_" + header_name.downcase().gsub("-", "_")
     end
 end
@@ -180,7 +190,7 @@ class LogFormatFactory
         elsif f_string =~ /^(%[A-Za-z])(.*)/
             # Simple element (e.g. "%h", "%u")
             return [@element_factory.from_abbrev($1), $2]
-        elsif f_string =~ /^(%\{.+?\}[Ceino])(.*)/
+        elsif f_string =~ /^(%\{.+?\}[Ceinor])(.*)/
             # "Contents of" element (e.g. "%{Accept}i")
             return [@element_factory.from_abbrev($1), $2]
         elsif f_string =~ /^(.+?)(%.*|$)/
