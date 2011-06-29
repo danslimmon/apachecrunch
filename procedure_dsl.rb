@@ -49,23 +49,37 @@ class Each < ProcedureRoutine
 end
 
 
-# DSL routine that filters for entries for which the given block evaluates to true
+# DSL routine(s) that filter(s) for entries for which the given block evaluates to true
 #
-# The filter happens in place, so the contents of the analyzed log file will be replaced with
-# only the lines that match the filter.
-class FilterInPlace < ProcedureRoutine
-    def execute(&blk)
-        @_rep_file = @_log_parser.begin_replacement if @replacement_file.nil?
+# This can be called as 'filter()', which means the filtering happens in a temporary file, or
+# as 'filter(path)', which means the filtering happens in the given file.  It can also be called
+# as 'filter!()', which means the filtering happens in place, clobbering what's in apachecrunch's
+# target file.
+class Filter < ProcedureRoutine
+    def execute(path=nil, in_place=false, &blk)
+        @_in_place = in_place
+        @_results_file = _make_results_file(path, in_place)
 
         while @_current_entry = @_log_parser.next_entry
             if instance_eval(&blk)
-                @_rep_file.write(@_current_entry["text"])
+                @_results_file.write(@_current_entry["text"])
             end
         end
     end
 
     def finish
-        @_log_parser.replace
+        @_log_parser.replace_target(@_results_file, @_in_place)
+    end
+
+    # Returns a writable file object to which the results of the filter should be written.
+    def _make_results_file(path, in_place)
+        if path.nil?
+            # If no path passed (this includes the case where the filter is being performed
+            # in place), we want a temp file.
+            return Tempfile.new("apachecrunch")
+        else
+            return open(path, "w")
+        end
     end
 end
 
@@ -211,8 +225,16 @@ class ProcedureEnvironment
 
     # DSL routine 'filter!'
     def filter!(&blk)
-        routine = FilterInPlace.new(@_log_parser)
-        routine.execute(&blk)
+        routine = Filter.new(@_log_parser)
+        routine.execute(nil, true, &blk)
+        routine.finish
+        nil
+    end
+
+    # DSL routine 'filter'
+    def filter(target_path=nil, &blk)
+        routine = Filter.new(@_log_parser)
+        routine.execute(target_path, &blk)
         routine.finish
         nil
     end

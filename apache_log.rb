@@ -261,19 +261,22 @@ class LogParser
         @_file = nil
     end
 
-    # Returns a file object whose contents will replace those of the log file when replace() is
-    # called
-    def begin_replacement
-        @_rep_file = Tempfile.new("apache_log_parser")
-    end
+    # Makes the LogParser close its current log file and start parsing a new one instead
+    #
+    # `new_target` is a writable file object that the parser should start parsing, and if
+    # in_place is true, we actually replace the contents of the current target with those
+    # of the new target.
+    def replace_target(new_target, in_place)
+        new_target.close
 
-    # Replaces the file we're parsing with the contents of the replacement file returned by
-    # begin_replacement()
-    def replace
-        path = @_file.path
+        if in_place
+            old_path = @_file.path
+            File.rename(new_target.path, old_path)
+        else
+            @path = new_target.path
+        end
+
         @_file = nil
-        @_rep_file.close
-        File.rename(@_rep_file.path, path)
     end
 end
 
