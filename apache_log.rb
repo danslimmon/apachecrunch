@@ -1,35 +1,7 @@
 require "date"
 require "tempfile"
 
-# An element in a log format
-#
-# Exposes:
-#    abbrev: The Apache abbreviation for the element (such as "%h" or "%u" or "%{Referer}i")
-#    name: A short name for the element (such as "remote_host", "remote_user", or "reqhead_referer")
-#    regex: A regex that should match such an element ("[A-Za-z0-9.-]+", "[^:]+", ".+")
-#
-# If 'caster' is passed to the constructor, it should be a class with a method called "cast" which
-# transforms a string to the appropriate data type or format for consumption.  For example, the
-# IntegerCast class transforms "562" to 562.  The correct cast of a string can then be performed
-# by passing that string to this LogFormaElement instance's "cast" method.
-class LogFormatElement
-    attr_accessor :abbrev, :name, :regex
-
-    def initialize(abbrev, name, regex, caster=nil)
-        @abbrev = abbrev
-        @name = name
-        @regex = regex
-        @caster = caster
-    end
-
-    def cast(string_value)
-        if @caster.nil?
-            return string_value
-        else
-            return @caster.cast(string_value)
-        end
-    end
-end
+require 'log_element'
 
 
 # A bare string in a log format
@@ -41,79 +13,6 @@ class LogFormatString
 
     def initialize(regex)
         @regex = regex
-    end
-end
-
-
-# Converts a string to an integer
-class IntegerCast
-    def self.cast(string_value)
-        string_value.to_i
-    end
-end
-
-
-# Converts a CLF-formatted string to an integer
-#
-# "CLF-formatted" means that if the value is 0, the string will be a single hyphen instead of
-# a number.  Like %b, for instance.
-class CLFIntegerCast
-    def self.cast(string_value)
-        if string_value == "-"
-            return 0
-        end
-        string_value.to_i
-    end
-end
-
-
-# Generates LogFormatElement instances
-class LogFormatElementFactory
-    @@ABBREV_MAP = {
-        "%h" => LogFormatElement.new("%h", "remote_host", %q![A-Za-z0-9.-]+!),
-        "%l" => LogFormatElement.new("%l", "log_name", %q!\S+!),
-        "%u" => LogFormatElement.new("%u", "remote_user", %q![^:]+!),
-        "%t" => LogFormatElement.new("%t", "time", %q!\[\d\d/[A-Za-z]{3}/\d\d\d\d:\d\d:\d\d:\d\d -?\d\d\d\d\]!),
-        "%r" => LogFormatElement.new("%r", "req_firstline", %q![^"]+!),
-        "%s" => LogFormatElement.new("%s", "status", %q!\d+|-!),
-        "%B" => LogFormatElement.new("%b", "bytes_sent", %q!\d+!, caster=IntegerCast),
-        "%b" => LogFormatElement.new("%b", "bytes_sent", %q![\d-]+!, caster=CLFIntegerCast),
-        "%D" => LogFormatElement.new("%D", "serve_time_micro", %q!\d+!, caster=IntegerCast),
-        "%U" => LogFormatElement.new("%U", "url_path", %q!.*?\??)!),
-        "%q" => LogFormatElement.new("%q", "query_string", %q!\??\S*!),
-        "%m" => LogFormatElement.new("%m", "method", %q![A-Z]+!),
-        "%H" => LogFormatElement.new("%H", "protocol", %q!\S+!)
-    }
-
-    # Takes an Apache log format abbreviation and returns a corresponding LogFormatElement
-    def from_abbrev(abbrev)
-        if @@ABBREV_MAP.key?(abbrev)
-            # Standard Apache log format abbreviation
-            return @@ABBREV_MAP[abbrev]
-        elsif abbrev =~ /^%\{([A-Za-z0-9-]+)\}i/
-            # HTTP request header
-            return _reqheader_element(abbrev, $1)
-        elsif abbrev =~ /^%\{(.*?):([^}]+)\}r/
-            # Arbitrary regex
-            return _regex_element(abbrev, $1, $2)
-        end
-
-        raise "Unknown element format '#{abbrev}'"
-    end
-
-    # Returns a LogFormatElement based on an HTTP header
-    def _reqheader_element(abbrev, header_name)
-        LogFormatElement.new(abbrev, _header_name_to_element_name(header_name), %q![^"]*!)
-    end
-
-    # Returns a LogFormatElement based on an arbitrary regex
-    def _regex_element(abbrev, regex_name, regex)
-        LogFormatElement.new(abbrev, "regex_#{regex_name}", regex)
-    end
-
-    # Lowercases header name and turns hyphens into underscores
-    def _header_name_to_element_name(header_name)
-        "reqheader_" + header_name.downcase().gsub("-", "_")
     end
 end
 
@@ -224,10 +123,31 @@ class LogLineParser
         end
 
         line_hash = {"text" => log_text}
+        # Insert all the elements specified in the LogFormat
+        line_hash.merge!(_elements_to_hash(@_elements))
+        # Insert derived elements, but only if they're not yet populated.
         @_elements.each_with_index do |element, i|
-            line_hash[element.name] = element.cast(Regexp.last_match(i + 1))
+            if element.has_derived_elements?
+                line_hash.merge!(element.derived_values(Regexp.last_match(i+1))) do |name,old_val,new_val|
+                    old_val.nil? ? new_val : old_val
+                end
+            end
         end
+
         line_hash
+    end
+
+    # Constructs a hash containing "element name" => value based on the given list of elements.
+    #
+    # This should only be used to process elements that were specified in the LogFormat.  Derived
+    # elements are handled elsewhere.
+    def _elements_to_hash(element_list)
+        hsh = {}
+        @_elements.each_with_index do |element, i|
+            hsh[element.name] = element.cast(Regexp.last_match(i + 1))
+        end
+
+        hsh
     end
 end
 
