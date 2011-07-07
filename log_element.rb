@@ -33,19 +33,18 @@ end
 # of a string can then be performed by passing that string to this LogFormaElement
 # instance's "cast" method.
 #
-# '_has_derived_elements' and '_derive_elements' manage elements that can be derived from the
-# instance's value.  See ReqFirstlineElement for an example.
+# 'derive_elements' manages elements that can be derived from the instance's value.  See
+# ReqFirstlineElement for an example.
 class LogFormatElement
     @_caster = nil
-    @_has_derived_elements = false
 
     attr_accessor :abbrev, :name, :regex
     # Class variables that determine the _default_ for abbrev, name, and regex in an instance.
     # That is, an instance will initialize with these values for the instance variables @abbrev,
     # @name, and @regex.
     class << self; attr_accessor :abbrev, :name, :regex end
-    # Additionally we need to access these from within the instance:
-    class << self; attr_accessor :_caster, :_has_derived_elements end
+    # Additionally we need to access this from within the instance:
+    class << self; attr_accessor :_caster end
 
     def initialize
         @abbrev = self.class.abbrev
@@ -62,17 +61,6 @@ class LogFormatElement
         end
     end
 
-    # Determines whether this element should populate any other elements' values.
-    #
-    # They will only get populated if they are nil after all elements in the log entry have been
-    # populated.  For example, ReqFirstlineElement usually contains the request method, path,
-    # query string, and protocol, so it populates ReqMethodElement, UrlPathElement,
-    # QueryStringElement, and ProtocolElement if they are not mentioned explicitly in the log
-    # format.
-    def has_derived_elements?
-        self.class._has_derived_elements
-    end
-
     # Derives any other element values that we can, given the parsed value for the deriving element.
     #
     # Returns a hash of "element name" => value pairs that should be incorporated into the
@@ -80,7 +68,7 @@ class LogFormatElement
     #
     # See ReqFirstlineElement for an example.
     def derived_values(our_own_value)
-        raise NotImplementedError
+        {}
     end
 end
 
@@ -117,8 +105,6 @@ class ReqFirstlineElement < LogFormatElement
     @abbrev = "%r"
     @name = "req_firstline"
     @regex = %q![^"]+!
-
-    @_has_derived_elements = true
 
     def derived_values(our_own_value)
         hsh = {}

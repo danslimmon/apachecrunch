@@ -121,30 +121,42 @@ class LogLineParser
             warn "Log line did not match expected format: #{log_text}"
             return nil
         end
+        
+        # Make a hash mapping all parsed elements to their values in the entry
+        match_groups = Regexp.last_match.to_a
+        match_groups.shift # First value is the whole matched string, which we do not want
+        element_values = Hash[*@_elements.zip(match_groups).flatten]
 
+        # Start building the return value
         line_hash = {"text" => log_text}
         # Insert all the elements specified in the LogFormat
-        line_hash.merge!(_elements_to_hash(@_elements))
+        line_hash.merge!(_elements_to_hash(element_values))
         # Insert derived elements, but only if they're not yet populated.
-        @_elements.each_with_index do |element, i|
-            if element.has_derived_elements?
-                line_hash.merge!(element.derived_values(Regexp.last_match(i+1))) do |name,old_val,new_val|
-                    old_val.nil? ? new_val : old_val
-                end
-            end
+        line_hash.merge!(_derived_elements(element_values)) do |name,old_val,new_val|
+            old_val.nil? ? new_val : old_val
         end
 
         line_hash
     end
 
-    # Constructs a hash containing "element name" => value based on the given list of elements.
-    #
-    # This should only be used to process elements that were specified in the LogFormat.  Derived
-    # elements are handled elsewhere.
-    def _elements_to_hash(element_list)
+    # Returns a hash of "element name" => value pairs based on a hash of element => value pairs.
+    def _elements_to_hash(element_values)
         hsh = {}
-        @_elements.each_with_index do |element, i|
-            hsh[element.name] = element.cast(Regexp.last_match(i + 1))
+        element_values.each_pair do |element, value|
+            hsh[element.name] = value
+        end
+
+        hsh
+    end
+
+    # Returns hash of derived "element name" => value pairs from a hash of element => value pairs.
+    #
+    # That is, we go through the elements passed and if any offers derived elements, we include
+    # those in the return value.
+    def _derived_elements(element_values)
+        hsh = {}
+        element_values.each_pair do |element, value|
+            hsh.merge! element.derived_values(value)
         end
 
         hsh
