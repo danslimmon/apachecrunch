@@ -202,6 +202,41 @@ class ConfidenceInterval < ProcedureRoutine
 end
 
 
+# DSL routine that finds the most common n values for the given block.
+#
+# Returns a list of lists, each of which is [value, count].  This list is sorted by count.
+class MostCommon < ProcedureRoutine
+    @@VALUE = 0
+    @@COUNT = 1
+
+    def execute(n, &blk)
+        top_n = []
+        while @_current_entry = @_log_parser.next_entry
+            value = instance_eval(&blk)
+            if top_n.empty?
+                
+        end
+    end
+
+    # Inserts the given count/value pair into the list 'a' such that the latter to remain sorted.
+    def _insert_sorted(a, new_pair)
+        return (a + [new_pair]) if new_pair[1] > a[-1][1]
+
+        new_a = []
+        new_pair_inserted = false
+        a.each do |a_element|
+            if (not new_pair_inserted) and (new_pair[1] < a_element[1])
+                new_a << new_pair
+                new_pair_inserted = true
+            end
+            new_a << a_element
+        end
+
+        new_a
+    end
+end
+
+
 # The environment in which a procedure file is evaluated.
 #
 # A procedure file is some ruby code that uses our DSL.
