@@ -107,8 +107,10 @@ end
 # Makes log line hashes based on log file text
 class LogLineParser
     # Initializes the instance given a LogFormat instance
-    def initialize(log_format)
+    def initialize(log_format, progress_meter)
         @log_format = log_format
+        @progress_meter = progress_meter
+
         @_elements = log_format.elements
     end
 
@@ -136,6 +138,7 @@ class LogLineParser
             old_val.nil? ? new_val : old_val
         end
 
+        @progress_meter.output_progress(line_hash)
         line_hash
     end
 
@@ -222,13 +225,13 @@ end
 class LogParserFactory
     # Returns a new LogParser instance for the given log file, which should have the given Apache
     # log format.
-    def self.log_parser(format_string, path)
+    def self.log_parser(format_string, path, progress_meter)
         # First we generate a LogFormat instance based on the format string we were given
         format_factory = LogFormatFactory.new
         log_format = format_factory.from_format_string(format_string)
 
         # Now we generate a line parser
-        log_line_parser = LogLineParser.new(log_format)
+        log_line_parser = LogLineParser.new(log_format, progress_meter)
 
         # And now we can instantiate and return a LogParser
         return LogParser.new(path, log_line_parser)

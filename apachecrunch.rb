@@ -2,12 +2,18 @@
 
 require "apache_log"
 require "procedure_dsl"
+require "progress"
 
 
 # Prints the usage message and exits with the given exit code
 def barf_usage(exit_code)
-    puts "USAGE:
-    apachecrunch.rb <PROCEDURE> <LOG> [--format <FORMAT>]"
+    puts %q!USAGE:
+    apachecrunch.rb <PROCEDURE> <LOG>
+                    [--format=<FORMAT NAME>] [--progress <METER TYPE>]
+    
+    --progress: Gives you a progress meter as the log file is parsed.  METER TYPE can be "entry",
+                which prints out how many entries have been parsed so far, or "time", which prints
+                out the time of the last entry parsed.!
     exit exit_code
 end
 
@@ -24,12 +30,15 @@ def parse_args
 
     # Defaults
     options[:format] = "ncsa"
+    options[:progress] = nil
 
     while a = args.shift
         if a == "--format"
             options[:format] = args.shift
         elsif a == "--help"
             barf_usage(0)
+        elsif a == "--progress"
+            options[:progress] = args.shift
         elsif options.key?(:procedure)
             options[:logfile] = a
         else
@@ -47,8 +56,10 @@ end
 options = parse_args
 
 format_string = FormatStringFinder.new.find(options[:format])
+progress_meter = ProgressMeterFactory.from_options(options)
 log_parser = LogParserFactory.log_parser(
                         format_string=format_string,
-                        path=options[:logfile])
+                        path=options[:logfile],
+                        progress_meter=progress_meter)
 proc_env = ProcedureEnvironment.new(log_parser)
 proc_env.eval_procedure(open(options[:procedure]).read())
