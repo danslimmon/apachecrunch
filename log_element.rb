@@ -106,9 +106,15 @@ class ReqFirstlineElement < LogFormatElement
     @name = "req_firstline"
     @regex = %q![^"]+!
 
+    @_derivation_regex = nil
+
     def derived_values(our_own_value)
+        if @_derivation_regex.nil?
+            @_derivation_regex = Regexp.compile("^(#{ReqMethodElement.regex})\s+(#{UrlPathElement.regex})(#{QueryStringElement.regex})\s+(#{ProtocolElement.regex})$")
+        end
+
         hsh = {}
-        if our_own_value =~ /^(#{ReqMethodElement.regex})\s+(#{UrlPathElement.regex})(#{QueryStringElement.regex})\s+(#{ProtocolElement.regex})$/
+        if our_own_value =~ @_derivation_regex
             hsh[ReqMethodElement.name] = $1
             hsh[UrlPathElement.name] = $2
             hsh[QueryStringElement.name] = $3
