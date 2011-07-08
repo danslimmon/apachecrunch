@@ -206,33 +206,17 @@ end
 #
 # Returns a list of lists, each of which is [value, count].  This list is sorted by count.
 class MostCommon < ProcedureRoutine
-    @@VALUE = 0
-    @@COUNT = 1
-
     def execute(n, &blk)
-        top_n = []
-        while @_current_entry = @_log_parser.next_entry
-            value = instance_eval(&blk)
-            if top_n.empty?
-                
-        end
-    end
+        counts = CountBy.new(@_log_parser).execute(&blk)
 
-    # Inserts the given count/value pair into the list 'a' such that the latter to remain sorted.
-    def _insert_sorted(a, new_pair)
-        return (a + [new_pair]) if new_pair[1] > a[-1][1]
-
-        new_a = []
-        new_pair_inserted = false
-        a.each do |a_element|
-            if (not new_pair_inserted) and (new_pair[1] < a_element[1])
-                new_a << new_pair
-                new_pair_inserted = true
-            end
-            new_a << a_element
+        # Sort the block values descending
+        sorted_vals = counts.keys.sort do |val_a,val_b|
+            - (counts[val_a] <=> counts[val_b])
         end
 
-        new_a
+        sorted_vals[0..n].map do |val|
+            [val, counts[val]]
+        end
     end
 end
 
@@ -310,6 +294,14 @@ class ProcedureEnvironment
     def confidence_interval(confidence, &blk)
         routine = ConfidenceInterval.new(@_log_parser)
         rv = routine.execute(confidence, &blk)
+        routine.finish
+        rv
+    end
+
+    # DSL routine 'most_common'
+    def most_common(n, &blk)
+        routine = MostCommon.new(@_log_parser)
+        rv = routine.execute(n, &blk)
         routine.finish
         rv
     end
