@@ -4,6 +4,35 @@ require "tempfile"
 require 'log_element'
 
 
+# A parsed entry from the log.
+#
+# Acts like a hash, in that you get at the log elements (e.g. "url_path", "remote_host") by
+# as entry[name].
+class LogEntry
+    def initialize(derivation_map)
+        @_derivation_map = derivation_map
+        @_attributes = {}
+    end
+
+    def []=(name, value)
+        @_attributes[name] = value
+    end
+
+    def [](name)
+        return @_attributes[name] if @_attributes.key?(name)
+
+        derived_from_cls = @_derivation_map[name]
+        return nil if derived_from_cls.nil?
+
+        derived_from_cls.derive(name, @_attributes[derived_from_cls.name])
+    end
+
+    def merge!(hsh)
+        @_attributes.merge!(hsh)
+    end
+end
+
+
 # A bare string in a log format
 #
 # Exposes 'regex' for consistency with LogFormatElement, but there shouldn't be anything other
@@ -60,6 +89,18 @@ class LogFormat
             tok.respond_to?(:name)
         end
     end
+
+    # Returns hash mapping names of elements to the element class from which they can be derived.
+    def derivation_map
+        hsh = {}
+        elements.each do |tok|
+            tok.derived_elements.each do |derived_element|
+                hsh[derived_element.name] = tok.class
+            end
+        end
+
+        hsh
+    end
 end
 
 
@@ -112,6 +153,7 @@ class LogLineParser
         @progress_meter = progress_meter
 
         @_elements = log_format.elements
+        @_derivation_map = log_format.derivation_map
     end
 
     # Returns a log line hash built from a line of text, or nil if the line was malformatted
@@ -130,16 +172,13 @@ class LogLineParser
         element_values = Hash[*@_elements.zip(match_groups).flatten]
 
         # Start building the return value
-        line_hash = {"text" => log_text}
+        entry = LogEntry.new(@_derivation_map)
+        entry["text"] = log_text
         # Insert all the elements specified in the LogFormat
-        line_hash.merge!(_elements_to_hash(element_values))
-        # Insert derived elements, but only if they're not yet populated.
-        line_hash.merge!(_derived_elements(element_values)) do |name,old_val,new_val|
-            old_val.nil? ? new_val : old_val
-        end
+        entry.merge!(_elements_to_hash(element_values))
 
-        @progress_meter.output_progress(line_hash)
-        line_hash
+        @progress_meter.output_progress(entry)
+        entry
     end
 
     # Returns a hash of "element name" => value pairs based on a hash of element => value pairs.
@@ -159,7 +198,7 @@ class LogLineParser
     def _derived_elements(element_values)
         hsh = {}
         element_values.each_pair do |element, value|
-            hsh.merge! element.derived_values(value)
+            hsh.merge!(element.derived_values(value))
         end
 
         hsh

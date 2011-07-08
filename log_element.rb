@@ -61,14 +61,18 @@ class LogFormatElement
         end
     end
 
-    # Derives any other element values that we can, given the parsed value for the deriving element.
-    #
-    # Returns a hash of "element name" => value pairs that should be incorporated into the
-    # result of parsing a log line.
+    # Derives the named element (e.g. "url_path") from a given value for this one.
     #
     # See ReqFirstlineElement for an example.
-    def derived_values(our_own_value)
-        {}
+    def self.derive(name, our_own_value)
+        raise NotImplementedError
+    end
+
+    # Returns a list of the element classes that can be derived from this one.
+    #
+    # See ReqFirstlineElement for an example.
+    def derived_elements
+        []
     end
 end
 
@@ -108,7 +112,7 @@ class ReqFirstlineElement < LogFormatElement
 
     @_derivation_regex = nil
 
-    def derived_values(our_own_value)
+    def self.derive(name, our_own_value)
         if @_derivation_regex.nil?
             @_derivation_regex = Regexp.compile("^(#{ReqMethodElement.regex})\s+(#{UrlPathElement.regex})(#{QueryStringElement.regex})\s+(#{ProtocolElement.regex})$")
         end
@@ -121,7 +125,11 @@ class ReqFirstlineElement < LogFormatElement
             hsh[ProtocolElement.name] = $4
         end
 
-        hsh
+        hsh[name]
+    end
+
+    def derived_elements
+        return [ReqMethodElement, UrlPathElement, QueryStringElement, ProtocolElement]
     end
 end
 
