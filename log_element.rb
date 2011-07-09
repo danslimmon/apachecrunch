@@ -79,35 +79,35 @@ end
 
 class RemoteHostElement < LogFormatElement
     @abbrev = "%h"
-    @name = "remote_host"
+    @name = :remote_host
     @regex = %q![A-Za-z0-9.-]+!
 end
 
 
 class LogNameElement < LogFormatElement
     @abbrev = "%l"
-    @name = "log_name"
+    @name = :log_name
     @regex = %q!\S+!
 end
 
 
 class RemoteUserElement < LogFormatElement
     @abbrev = "%u"
-    @name = "remote_user"
+    @name = :remote_user
     @regex = %q![^:]+!
 end
 
 
 class TimeElement < LogFormatElement
     @abbrev = "%t"
-    @name = "time"
+    @name = :time
     @regex = %q!\[\d\d/[A-Za-z]{3}/\d\d\d\d:\d\d:\d\d:\d\d -?\d\d\d\d\]!
 end
 
 
 class ReqFirstlineElement < LogFormatElement
     @abbrev = "%r"
-    @name = "req_firstline"
+    @name = :req_firstline
     @regex = %q![^"]+!
 
     @_derivation_regex = nil
@@ -136,14 +136,14 @@ end
 
 class StatusElement < LogFormatElement
     @abbrev = "%s"
-    @name = "status"
+    @name = :status
     @regex = %q!\d+|-!
 end
 
 
 class BytesSentElement < LogFormatElement
     @abbrev = "%b"
-    @name = "bytes_sent"
+    @name = :bytes_sent
     @regex = %q!\d+!
 
     @@_caster = IntegerCast
@@ -152,7 +152,7 @@ end
 
 class BytesSentElement < LogFormatElement
     @abbrev = "%b"
-    @name = "bytes_sent"
+    @name = :bytes_sent
     @regex = %q![\d-]+!
 
     @@_caster = CLFIntegerCast
@@ -161,7 +161,7 @@ end
 
 class ServeTimeMicroElement < LogFormatElement
     @abbrev = "%D"
-    @name = "serve_time_micro"
+    @name = :serve_time_micro
     @regex = %q!\d+!
 
     @@_caster = IntegerCast
@@ -170,28 +170,28 @@ end
 
 class UrlPathElement < LogFormatElement
     @abbrev = "%U"
-    @name = "url_path"
+    @name = :url_path
     @regex = %q!/[^?]*!
 end
 
 
 class QueryStringElement < LogFormatElement
     @abbrev = "%q"
-    @name = "query_string"
+    @name = :query_string
     @regex = %q!\??\S*!
 end
 
 
 class ReqMethodElement < LogFormatElement
     @abbrev = "%m"
-    @name = "req_method"
+    @name = :req_method
     @regex = %q![A-Z]+!
 end
 
 
 class ProtocolElement < LogFormatElement
     @abbrev = "%H"
-    @name = "protocol"
+    @name = :protocol
     @regex = %q!\S+!
 end
 
@@ -275,13 +275,13 @@ class LogFormatElementFactory
 
         element.abbrev = abbrev
         element.regex = regex
-        element.name = "regex_#{regex_name}"
+        element.name = "regex_#{regex_name}".to_sym
 
         element
     end
 
     # Lowercases header name and turns hyphens into underscores
     def _header_name_to_element_name(header_name)
-        "reqheader_" + header_name.downcase().gsub("-", "_")
+        ("reqheader_" + header_name.downcase().gsub("-", "_")).to_sym
     end
 end

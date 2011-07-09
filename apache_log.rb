@@ -173,7 +173,7 @@ class LogLineParser
 
         # Start building the return value
         entry = LogEntry.new(@_derivation_map)
-        entry["text"] = log_text
+        entry[:text] = log_text
         # Insert all the elements specified in the LogFormat
         entry.merge!(_elements_to_hash(element_values))
 

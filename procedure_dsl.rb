@@ -7,7 +7,7 @@ class ProcedureRoutine
 
     # Allows blocks passed to a DSL routine to access parameters from the current log entry
     def method_missing(sym, *args)
-        @_current_entry[sym.to_s]
+        @_current_entry[sym]
     end
 
     # Executes the DSL routine using the given block
@@ -62,7 +62,7 @@ class Filter < ProcedureRoutine
 
         while @_current_entry = @_log_parser.next_entry
             if instance_eval(&blk)
-                @_results_file.write(@_current_entry["text"])
+                @_results_file.write(@_current_entry[:text])
             end
         end
     end
