@@ -52,12 +52,12 @@ class LogFormatElement
         @regex = self.class.regex
     end
 
-    # Casts a string found in the log to the correct type, using the class's @@_caster attribute.
+    # Casts a string found in the log to the correct type, using the class's @_caster attribute.
     def cast(string_value)
-        if self.class._caster.nil?
+        if _caster.nil?
             return string_value
         else
-            return self.class._caster.cast(string_value)
+            return _caster.cast(string_value)
         end
     end
 
@@ -102,6 +102,60 @@ class TimeElement < LogFormatElement
     @abbrev = "%t"
     @name = :time
     @regex = %q!\[\d\d/[A-Za-z]{3}/\d\d\d\d:\d\d:\d\d:\d\d [-+]\d\d\d\d\]!
+
+    @_derivation_regex = nil
+    @_month_map = {"Jan" => 1, "Feb" => 2, "Mar" => 3, "Apr" => 4, "May" => 5, "Jun" => 6,
+                   "Jul" => 7, "Aug" => 8, "Sep" => 9, "Oct" => 10, "Nov" => 11, "Dec" => 12}
+
+    def self.derive(name, our_own_value)
+        if @_derivation_regex.nil?
+            @_derivation_regex = Regexp.compile(%q!^\[(\d\d)/([A-Za-z]{3})/(\d\d\d\d):(\d\d):(\d\d):(\d\d)!)
+        end
+
+        hsh = {}
+        if our_own_value =~ @_derivation_regex
+            hsh[:year] = $3.to_i
+            hsh[:month] = @_month_map[$2]
+            hsh[:day] = $1.to_i
+
+            hsh[:hour] = $4.to_i
+            hsh[:minute] = $5.to_i
+            hsh[:second] = $6.to_i
+        end
+
+        hsh[name]
+    end
+
+    def derived_elements
+        [YearElement, MonthElement, DayElement, HourElement, MinuteElement, SecondElement]
+    end
+end
+
+
+# Elements derived from TimeElement
+class YearElement < LogFormatElement
+    @name = :year
+    @regex = %q!\d{4}!
+end
+class MonthElement < LogFormatElement
+    @name = :month
+    @regex = %q![A-Za-z]{3}!
+end
+class DayElement < LogFormatElement
+    @name = :day
+    @regex = %q!\d{2}!
+end
+class HourElement < LogFormatElement
+    @name = :hour
+    @regex = %q!\d{2}!
+end
+class MinuteElement < LogFormatElement
+    @name = :minute
+    @regex = %q!\d{2}!
+end
+class SecondElement < LogFormatElement
+    @name = :second
+    @regex = %q!\d{2}!
 end
 
 
@@ -155,7 +209,7 @@ class BytesSentElement < LogFormatElement
     @name = :bytes_sent
     @regex = %q![\d-]+!
 
-    @@_caster = CLFIntegerCast
+    @_caster = CLFIntegerCast
 end
 
 
@@ -164,7 +218,7 @@ class BytesSentWithHeadersElement < LogFormatElement
     @name = :bytes_sent_with_headers
     @regex = %q!\d+!
 
-    @@_caster = IntegerCast
+    @_caster = IntegerCast
 end
 
 
@@ -173,7 +227,7 @@ class ServeTimeMicroElement < LogFormatElement
     @name = :serve_time_micro
     @regex = %q!\d+!
 
-    @@_caster = IntegerCast
+    @_caster = IntegerCast
 end
 
 
