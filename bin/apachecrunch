@@ -1,8 +1,13 @@
 #!/usr/bin/ruby
 
-require "apache_log"
-require "procedure_dsl"
+# For development while inside the apachecrunch dir:
+$: << ".."
+$: << "./lib"
+require "rubygems"
+
+require "apachecrunch"
 require "progress"
+require "procedure_dsl"
 
 
 # Prints the usage message and exits with the given exit code

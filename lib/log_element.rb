@@ -101,7 +101,7 @@ end
 class TimeElement < LogFormatElement
     @abbrev = "%t"
     @name = :time
-    @regex = %q!\[\d\d/[A-Za-z]{3}/\d\d\d\d:\d\d:\d\d:\d\d -?\d\d\d\d\]!
+    @regex = %q!\[\d\d/[A-Za-z]{3}/\d\d\d\d:\d\d:\d\d:\d\d [-+]\d\d\d\d\]!
 end
 
 
@@ -156,6 +156,15 @@ class BytesSentElement < LogFormatElement
     @regex = %q![\d-]+!
 
     @@_caster = CLFIntegerCast
+end
+
+
+class BytesSentWithHeadersElement < LogFormatElement
+    @abbrev = "%O"
+    @name = :bytes_sent_with_headers
+    @regex = %q!\d+!
+
+    @@_caster = IntegerCast
 end
 
 
@@ -215,6 +224,7 @@ class ElementDictionary
                     StatusElement,
                     BytesSentElement,
                     BytesSentElement,
+                    BytesSentWithHeadersElement,
                     ServeTimeMicroElement,
                     UrlPathElement,
                     QueryStringElement,
