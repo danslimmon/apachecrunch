@@ -134,6 +134,10 @@ class LogFormatFactory
         elsif f_string =~ /^(%[A-Za-z])(.*)/
             # Simple element (e.g. "%h", "%u")
             return [@element_factory.from_abbrev($1), $2]
+        elsif f_string =~ /^%[<>]([A-Za-z])(.*)/
+            # No idea how to handle mod_log_config's "which request" system yet, so we
+            # ignore it.
+            return [@element_factory.from_abbrev("%" + $1), $2]
         elsif f_string =~ /^(%\{.+?\}[Ceinor])(.*)/
             # "Contents of" element (e.g. "%{Accept}i")
             return [@element_factory.from_abbrev($1), $2]
@@ -282,8 +286,8 @@ end
 class FormatStringFinder
     @@FILE_NAME = "log_formats.rb"
     @@DEFAULT_FORMATS = {
-        :ncsa => %q!%h %l %u %t \"%r\" %s %b \"%{Referer}i\" \"%{User-agent}i\"!,
-        :ubuntu => %q!%h %l %u %t \"%r\" %s %O \"%{Referer}i\" \"%{User-Agent}i\"!
+        :ncsa => %q!%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"!,
+        :ubuntu => %q!%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"!
     }
 
     # Finds the given format string in the configuration file(s)
