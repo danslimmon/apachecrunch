@@ -1,19 +1,8 @@
-class LogEntry_DerivationSourceElement < LogFormatElement
-    @name = :derivation_source
-
-    def self.derive(name, our_own_value)
-        if name == :derived
-            return "derived from #{our_own_value}"
-        end
-
-        nil
-    end
-end
-
+require 'test/stub'
 
 class TestLogEntry < Test::Unit::TestCase
     def setup
-        @inst = LogEntry.new({:derived => LogEntry_DerivationSourceElement})
+        @inst = LogEntry.new({:derived => StubDerivationSourceElement})
     end
 
     def teardown
