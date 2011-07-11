@@ -106,23 +106,30 @@ class LogFormat
 end
 
 
-# Turns a string specifying an Apache log format into a LogFormat instance
-class LogFormatFactory
-    def initialize
-        @element_factory = LogFormatElementFactory.new
+# Parses a log format string
+class LogFormatParser
+    # Initializes the LogFormatParser
+    #
+    # Takes a FormatElementFactory instance, and you can inject a replacement for the
+    # LogFormatString class.
+    def initialize(format_element_factory, format_string_cls=LogFormatString)
+        @_element_factory = format_element_factory
+        @_format_string_cls = format_string_cls
     end
 
-    # Constructs and returns a LogFormat instance based on the given Apache log format string
-    def from_format_string(f_string)
-        logformat = LogFormat.new
-        logformat.format_string = f_string
-
-        until f_string.empty?
-            token, f_string = _shift_token(f_string)
-            logformat.append(token)
+    # Parses the given format_string (e.g. "%h %u %s #{Referer}i") and returns a list of tokens.
+    #
+    # These tokens are all instances of LogFormatString or LogFormatElement.
+    def parse_string(format_string)
+        s = format_string
+        tokens = []
+        
+        until s.empty?
+            token, s = _shift_token(s)
+            tokens << token
         end
 
-        logformat
+        tokens
     end
 
     # Finds the first token (a LogFormatElement or LogFormatString) in a format string
@@ -132,21 +139,38 @@ class LogFormatFactory
     def _shift_token(f_string)
         if f_string =~ /^%%(.*)/
             # Literal "%"
-            return [LogFormatString.new("%%"), $1]
+            return [@_format_string_cls.new("%%"), $1]
         elsif f_string =~ /^(%[A-Za-z])(.*)/
             # Simple element (e.g. "%h", "%u")
-            return [@element_factory.from_abbrev($1), $2]
+            return [@_element_factory.from_abbrev($1), $2]
         elsif f_string =~ /^%[<>]([A-Za-z])(.*)/
             # No idea how to handle mod_log_config's "which request" system yet, so we
             # ignore it.
-            return [@element_factory.from_abbrev("%" + $1), $2]
+            return [@_element_factory.from_abbrev("%" + $1), $2]
         elsif f_string =~ /^(%\{.+?\}[Ceinor])(.*)/
             # "Contents of" element (e.g. "%{Accept}i")
-            return [@element_factory.from_abbrev($1), $2]
+            return [@_element_factory.from_abbrev($1), $2]
         elsif f_string =~ /^(.+?)(%.*|$)/
             # Bare string up until the next %, or up until the end of the format string
-            return [LogFormatString.new($1), $2]
+            return [@_format_string_cls.new($1), $2]
         end
+    end
+end
+
+
+# Turns a string specifying an Apache log format into a LogFormat instance
+class LogFormatFactory
+    # Constructs and returns a LogFormat instance based on the given Apache log format string
+    def self.from_format_string(f_string)
+        logformat = LogFormat.new
+        logformat.format_string = f_string
+
+        element_factory = LogFormatElementFactory.new
+
+        format_parser = LogFormatParser.new(element_factory)
+        logformat.tokens = format_parser.parse_string(f_string)
+
+        logformat
     end
 end
 
@@ -272,8 +296,7 @@ class LogParserFactory
     # log format.
     def self.log_parser(format_string, path, progress_meter)
         # First we generate a LogFormat instance based on the format string we were given
-        format_factory = LogFormatFactory.new
-        log_format = format_factory.from_format_string(format_string)
+        log_format = LogFormatFactory.from_format_string(format_string)
 
         # Now we generate a line parser
         log_line_parser = LogLineParser.new(log_format, progress_meter)
