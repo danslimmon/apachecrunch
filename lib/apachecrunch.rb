@@ -61,6 +61,8 @@ class LogFormat
     end
 
     # Returns a compiled regex to match a log line in this format
+    #
+    # Each group matched will correspond to an element in the log format.
     def regex
         return @_regex unless @_regex.nil?
 
