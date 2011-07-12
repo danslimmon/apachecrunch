@@ -44,3 +44,13 @@ class StubDerivationSourceElement < LogFormatElement
         nil
     end
 end
+
+class StubLogFormatElementFactory
+    def from_abbrev(abbrev)
+        if abbrev =~ /^%/
+            return StubFormatElement.new
+        else
+            return StubFormatString.new
+        end
+    end
+end
