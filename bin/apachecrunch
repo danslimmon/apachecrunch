@@ -60,9 +60,9 @@ end
 
 options = parse_args
 
-format_string = FormatStringFinder.new.find(options[:format])
+format_string = ApacheCrunch::FormatStringFinder.new.find(options[:format])
 progress_meter = ProgressMeterFactory.from_options(options)
-log_parser = LogParserFactory.log_parser(
+log_parser = ApacheCrunch::LogParserFactory.log_parser(
                         format_string=format_string,
                         path=options[:logfile],
                         progress_meter=progress_meter)

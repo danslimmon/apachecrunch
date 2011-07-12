@@ -1,8 +1,8 @@
 require 'test/stub'
 
-class TestLogFormat < Test::Unit::TestCase
+class TestFormat < Test::Unit::TestCase
     def setup
-        @inst = LogFormat.new
+        @inst = ApacheCrunch::Format.new
     end
 
     def teardown

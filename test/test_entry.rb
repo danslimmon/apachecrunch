@@ -1,8 +1,8 @@
 require 'test/stub'
 
-class TestLogEntry < Test::Unit::TestCase
+class TestEntry < Test::Unit::TestCase
     def setup
-        @inst = LogEntry.new({:derived => StubDerivationSourceElement})
+        @inst = ApacheCrunch::Entry.new({:derived => StubDerivationSourceElement})
     end
 
     def teardown

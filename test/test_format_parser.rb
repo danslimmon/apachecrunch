@@ -1,9 +1,9 @@
 require 'test/stub'
 
-class TestLogFormatParser < Test::Unit::TestCase
+class TestFormatParser < Test::Unit::TestCase
     def setup
-        @inst = LogFormatParser.new(StubLogFormatElementFactory.new,
-                                    StubFormatString)
+        @inst = ApacheCrunch::FormatParser.new(StubLogFormatElementFactory.new,
+                                               StubFormatString)
     end
 
     def teardown
