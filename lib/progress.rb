@@ -39,7 +39,7 @@ class TimeProgressMeter < ProgressMeter
     def output_progress(entry)
         @_entry_count += 1
         if @_entry_count % @_period == 0
-            puts "Processed through %s" % [entry["time"]]
+            puts "Processed through %s" % [entry[:time]]
         end
     end
 end
