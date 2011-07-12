@@ -11,14 +11,14 @@ class TestFormatParser < Test::Unit::TestCase
     end
 
     def test_parse_simple
-        tokens = @inst.parse_string("%Z %z")
+        tokens = @inst.parse_def("%Z %z")
         [StubFormatElement, StubFormatString, StubFormatElement].each_with_index do |c,i|
             assert_instance_of(c, tokens[i])
         end
     end
 
     def test_parse_complex
-        tokens = @inst.parse_string("%{Foo-Bar}i %{baz:\d+}r")
+        tokens = @inst.parse_def("%{Foo-Bar}i %{baz:\d+}r")
         [StubFormatElement, StubFormatString, StubFormatElement].each_with_index do |c,i|
             assert_instance_of(c, tokens[i])
         end

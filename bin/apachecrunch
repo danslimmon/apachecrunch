@@ -60,11 +60,11 @@ end
 
 options = parse_args
 
-format_string = ApacheCrunch::FormatStringFinder.new.find(options[:format])
+format_def = ApacheCrunch::FormatDefinitionFinder.new.find(options[:format])
 progress_meter = ProgressMeterFactory.from_options(options)
 log_parser = ApacheCrunch::LogParserFactory.log_parser(
-                        format_string=format_string,
-                        path=options[:logfile],
-                        progress_meter=progress_meter)
+                        format_def,
+                        options[:logfile],
+                        progress_meter)
 proc_env = ProcedureEnvironment.new(log_parser)
 proc_env.eval_procedure(open(options[:procedure]).read())

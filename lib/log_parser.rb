@@ -60,9 +60,9 @@ class ApacheCrunch
     class LogParserFactory
         # Returns a new LogParser instance for the given log file, which should have the given
         # Apache log format.
-        def self.log_parser(format_string, path, progress_meter)
-            # First we generate a Format instance based on the format string we were given
-            log_format = FormatFactory.from_format_string(format_string)
+        def self.log_parser(format_def, path, progress_meter)
+            # First we generate a Format instance based on the format definition we were given
+            log_format = FormatFactory.from_format_def(format_def)
 
             # Now we generate a line parser
             log_line_parser = EntryParser.new(log_format, progress_meter)
