@@ -2,7 +2,7 @@ require "rake"
 
 spec = Gem::Specification.new do |s|
     s.name = "apachecrunch"
-    s.version = "0.3"
+    s.version = "0.4"
     s.summary = "Apache log analysis tool designed for ease of use"
     s.description = %q!Apache Crunch is an analysis tool for Apache logs.  You write little scripts
 to do the analysis, using our DSL to make the procedure as simple and readable
