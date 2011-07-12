@@ -36,13 +36,12 @@ end
 # 'derive_elements' manages elements that can be derived from the instance's value.  See
 # ReqFirstlineElement for an example.
 class LogFormatElement
-    @_caster = nil
 
-    attr_accessor :abbrev, :name, :regex
+    attr_accessor :abbrev, :name, :regex, :captured
     # Class variables that determine the _default_ for abbrev, name, and regex in an instance.
     # That is, an instance will initialize with these values for the instance variables @abbrev,
     # @name, and @regex.
-    class << self; attr_accessor :abbrev, :name, :regex end
+    class << self; attr_accessor :abbrev, :name, :regex, :captured end
     # Additionally we need to access this from within the instance:
     class << self; attr_accessor :_caster end
 
@@ -50,6 +49,7 @@ class LogFormatElement
         @abbrev = self.class.abbrev
         @name = self.class.name
         @regex = self.class.regex
+        @captured = self.class.captured
     end
 
     # Casts a string found in the log to the correct type, using the class's @_caster attribute.
@@ -77,10 +77,36 @@ class LogFormatElement
 end
 
 
+# A bare string in a log format.
+#
+# There shouldn't be anything in @regex except one-to-one character matching.
+class StringElement < LogFormatElement
+    @captured = false
+
+    def initialize(contents)
+        @_contents = contents
+        super()
+    end
+
+    def regex
+        r = @_contents
+        # Make sure there aren't any regex special characters in the string that will confuse
+        # the EntryParser later.
+        '()[].?+{}\\'.each_char do |special_char|
+            while r.include?(special_char) do
+                r = r.gsub(special_char, '\\' + special_char)
+            end
+        end
+        r
+    end
+end
+
+
 class RemoteHostElement < LogFormatElement
     @abbrev = "%h"
     @name = :remote_host
     @regex = %q![A-Za-z0-9.-]+!
+    @captured = true
 end
 
 
@@ -88,6 +114,7 @@ class LogNameElement < LogFormatElement
     @abbrev = "%l"
     @name = :log_name
     @regex = %q!\S+!
+    @captured = true
 end
 
 
@@ -95,6 +122,7 @@ class RemoteUserElement < LogFormatElement
     @abbrev = "%u"
     @name = :remote_user
     @regex = %q![^:]+!
+    @captured = true
 end
 
 
@@ -102,6 +130,7 @@ class TimeElement < LogFormatElement
     @abbrev = "%t"
     @name = :time
     @regex = %q!\[\d\d/[A-Za-z]{3}/\d\d\d\d:\d\d:\d\d:\d\d [-+]\d\d\d\d\]!
+    @captured = true
 
     @_derivation_regex = nil
     @_month_map = {"Jan" => 1, "Feb" => 2, "Mar" => 3, "Apr" => 4, "May" => 5, "Jun" => 6,
@@ -163,6 +192,7 @@ class ReqFirstlineElement < LogFormatElement
     @abbrev = "%r"
     @name = :req_firstline
     @regex = %q![^"]+!
+    @captured = true
 
     @_derivation_regex = nil
 
@@ -192,6 +222,7 @@ class StatusElement < LogFormatElement
     @abbrev = "%s"
     @name = :status
     @regex = %q!\d+|-!
+    @captured = true
 end
 
 
@@ -199,6 +230,7 @@ class BytesSentElement < LogFormatElement
     @abbrev = "%b"
     @name = :bytes_sent
     @regex = %q!\d+!
+    @captured = true
 
     @@_caster = IntegerCast
 end
@@ -208,6 +240,7 @@ class BytesSentElement < LogFormatElement
     @abbrev = "%b"
     @name = :bytes_sent
     @regex = %q![\d-]+!
+    @captured = true
 
     @_caster = CLFIntegerCast
 end
@@ -217,6 +250,7 @@ class BytesSentWithHeadersElement < LogFormatElement
     @abbrev = "%O"
     @name = :bytes_sent_with_headers
     @regex = %q!\d+!
+    @captured = true
 
     @_caster = IntegerCast
 end
@@ -226,6 +260,7 @@ class ServeTimeMicroElement < LogFormatElement
     @abbrev = "%D"
     @name = :serve_time_micro
     @regex = %q!\d+!
+    @captured = true
 
     @_caster = IntegerCast
 end
@@ -235,6 +270,7 @@ class UrlPathElement < LogFormatElement
     @abbrev = "%U"
     @name = :url_path
     @regex = %q!/[^?]*!
+    @captured = true
 end
 
 
@@ -242,6 +278,7 @@ class QueryStringElement < LogFormatElement
     @abbrev = "%q"
     @name = :query_string
     @regex = %q!\??\S*!
+    @captured = true
 end
 
 
@@ -249,6 +286,7 @@ class ReqMethodElement < LogFormatElement
     @abbrev = "%m"
     @name = :req_method
     @regex = %q![A-Z]+!
+    @captured = true
 end
 
 
@@ -256,6 +294,7 @@ class ProtocolElement < LogFormatElement
     @abbrev = "%H"
     @name = :protocol
     @regex = %q!\S+!
+    @captured = true
 end
 
 
@@ -320,6 +359,13 @@ class LogFormatElementFactory
         end
 
         raise "Unknown element format '#{abbrev}'"
+    end
+
+    # Returns a LogFormatElement subclass instance based on a static string.
+    #
+    # This element not be captured by the EntryParser since it's always the same.
+    def from_string(s)
+        StringElement.new(s)
     end
 
     # Returns a format element based on an HTTP header

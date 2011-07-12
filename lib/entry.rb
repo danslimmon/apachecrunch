@@ -35,7 +35,7 @@ class ApacheCrunch
             @log_format = log_format
             @progress_meter = progress_meter
 
-            @_elements = log_format.elements
+            @_elements = log_format.captured_elements
             @_derivation_map = log_format.derivation_map
         end
 

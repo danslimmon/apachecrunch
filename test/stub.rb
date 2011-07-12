@@ -2,24 +2,28 @@ class StubFormatElement < LogFormatElement
     @abbrev = "%z"
     @name = :stub
     @regex = %q!.*!
+    @captured = true
 end
 
 class StubAlphanumericFormatElement < LogFormatElement
     @abbrev = "%Z"
     @name = :alnum
     @regex = %q![A-Za-z0-9]+!
+    @captured = true
 end
 
 class StubNumericFormatElement < LogFormatElement
     @abbrev = "%y"
     @name = :num
     @regex = %q!\d+!
+    @captured = true
 end
 
-class StubFormatString
-    attr_accessor :regex
-    def initialize(regex)
-        @regex = regex
+class StubStringElement < LogFormatElement
+    @captured = false
+
+    def initialize(s)
+        @regex = s
     end
 end
 
@@ -31,6 +35,7 @@ end
 
 class StubDerivationSourceElement < LogFormatElement
     @name = :derivation_source
+    @captured = true
 
     def derived_elements
         [StubDerivedElement]
@@ -47,10 +52,10 @@ end
 
 class StubLogFormatElementFactory
     def from_abbrev(abbrev)
-        if abbrev =~ /^%/
-            return StubFormatElement.new
-        else
-            return StubFormatString.new
-        end
+        return StubFormatElement.new
+    end
+
+    def from_string(s)
+        return StubStringElement.new(s)
     end
 end

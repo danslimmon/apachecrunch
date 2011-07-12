@@ -29,7 +29,7 @@ class TestFormat < Test::Unit::TestCase
     # Tests regex compilation for a more complex format
     def test_regex_complex
         @inst.append(StubNumericFormatElement.new)
-        @inst.append(StubFormatString.new(' \(some stuff\) '))
+        @inst.append(StubStringElement.new(' \(some stuff\) '))
         @inst.append(StubAlphanumericFormatElement.new)
 
         "54321 (some stuff) alphaNumericStuff" =~ @inst.regex
@@ -42,20 +42,20 @@ class TestFormat < Test::Unit::TestCase
     end
 
     # Tests the list of matchable elements
-    def test_elements
+    def test_captured_elements
         num_element = StubNumericFormatElement.new
         alnum_element = StubAlphanumericFormatElement.new
         @inst.append(num_element)
-        @inst.append(StubFormatString.new(' \(some stuff\) '))
+        @inst.append(StubStringElement.new(' \(some stuff\) '))
         @inst.append(alnum_element)
 
-        assert_equal(@inst.elements, [num_element, alnum_element])
+        assert_equal(@inst.captured_elements, [num_element, alnum_element])
     end
 
     # Tests the derivation map
     def test_derivation_map
         @inst.append(StubNumericFormatElement.new)
-        @inst.append(StubFormatString.new(' \(some stuff\) '))
+        @inst.append(StubStringElement.new(' \(some stuff\) '))
         @inst.append(StubDerivationSourceElement.new)
 
         assert(@inst.derivation_map, {:derived => StubDerivationSourceElement})
