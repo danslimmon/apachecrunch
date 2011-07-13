@@ -19,13 +19,13 @@ class ApacheCrunch
 
             while line_text = @_file.gets
                 return nil if line_text.nil?
-                logline = @entry_parser.from_text(line_text)
+                entry = @entry_parser.parse(line_text)
 
                 # The EntryParser returns nil and writes a warning if the line text doesn't
                 # match our expected format.
-                next if logline.nil?
+                next if entry.nil?
 
-                return logline
+                return entry
             end
         end
 

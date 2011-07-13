@@ -41,8 +41,8 @@ class ApacheCrunch
 
         # Returns a log line hash built from a line of text, or nil if the line was malformatted
         #
-        # The keys of the hash are names of LogFormatElements (e.g. "remote_host", "reqheader_referer")
-        def from_text(log_text)
+        # The keys of the hash are names of FormatElements (e.g. "remote_host", "reqheader_referer")
+        def parse(log_text)
             match = (log_text =~ @log_format.regex)
             if match.nil?
                 warn "Log line did not match expected format: #{log_text}"
