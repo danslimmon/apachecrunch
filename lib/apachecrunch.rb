@@ -4,5 +4,6 @@ require "tempfile"
 require 'config'
 require 'entry'
 require 'format'
-require 'format_element'
+require 'derivation'
+require 'format_token'
 require 'log_parser'
