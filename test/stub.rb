@@ -1,25 +1,25 @@
-class StubFormatElement < LogFormatElement
+class StubFormatToken < ApacheCrunch::FormatToken
     @abbrev = "%z"
     @name = :stub
     @regex = %q!.*!
     @captured = true
 end
 
-class StubAlphanumericFormatElement < LogFormatElement
+class StubAlphanumericFormatToken < ApacheCrunch::FormatToken
     @abbrev = "%Z"
     @name = :alnum
     @regex = %q![A-Za-z0-9]+!
     @captured = true
 end
 
-class StubNumericFormatElement < LogFormatElement
+class StubNumericFormatToken < ApacheCrunch::FormatToken
     @abbrev = "%y"
     @name = :num
     @regex = %q!\d+!
     @captured = true
 end
 
-class StubStringElement < LogFormatElement
+class StubStringToken < ApacheCrunch::FormatToken
     @captured = false
 
     def initialize(s)
@@ -27,18 +27,18 @@ class StubStringElement < LogFormatElement
     end
 end
 
-class StubDerivedElement < LogFormatElement
+class StubDerivedToken < ApacheCrunch::FormatToken
     @abbrev = ""
     @name = :derived
     @regex = %q!.*!
 end
 
-class StubDerivationSourceElement < LogFormatElement
+class StubDerivationSourceToken < ApacheCrunch::FormatToken
     @name = :derivation_source
     @captured = true
 
     def derived_elements
-        [StubDerivedElement]
+        [StubDerivedToken]
     end
 
     def self.derive(name, our_own_value)
@@ -50,12 +50,12 @@ class StubDerivationSourceElement < LogFormatElement
     end
 end
 
-class StubLogFormatElementFactory
+class StubFormatTokenFactory
     def from_abbrev(abbrev)
-        return StubFormatElement.new
+        return StubFormatToken.new
     end
 
     def from_string(s)
-        return StubStringElement.new(s)
+        return StubStringToken.new(s)
     end
 end
