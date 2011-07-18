@@ -36,39 +36,42 @@ class ApacheCrunch
         def name; nil; end
 
         def regex
-            r = @_string_value
             # Make sure there aren't any regex special characters in the string that will confuse
             # the parsing later.
-            '()[].?+{}\\'.each_char do |special_char|
-                while r.include?(special_char) do
-                    r = r.gsub(special_char, '\\' + special_char)
-                end
-            end
-
-            r
+            Regexp.escape(@_string_value)
         end
 
         def captured?; false; end
     end
 
 
+    # A token based on a request header.
     class ReqheaderToken < FormatToken
-        @name = nil
-        @abbrev = nil
-        @regex = %q![^"]*!
-        @caster = nil
-        @derivation_rule = nil
-        @captured = true
+        def populate!(header_name)
+            @_name = _header_name_to_token_name(header_name)
+        end
+
+        def name; @_name; end
+        def regex; '[^"]*'; end
+        def captured?; true; end
+
+        # Lowercases header name and turns hyphens into underscores
+        def _header_name_to_token_name(header_name)
+            ("reqheader_" + header_name.downcase().gsub("-", "_")).to_sym
+        end
     end
 
 
+    # A token based on an arbitrary regular expression.
     class RegexToken < FormatToken
-        @name = nil
-        @abbrev = nil
-        @regex = nil
-        @caster = nil
-        @derivation_rule = nil
-        @captured = true
+        def populate!(regex_name, regex_text)
+            @_name = "regex_#{regex_name}".to_sym
+            @_regex = regex_text
+        end
+
+        def name; @_name; end
+        def regex; @_regex; end
+        def captured?; true; end
     end
 
 
@@ -78,63 +81,30 @@ class ApacheCrunch
     class FormatTokenFactory
         # Takes an Apache log format abbreviation and returns a corresponding FormatToken
         def self.from_abbrev(abbrev)
-            token = TokenDictionary.fetch_by_abbrev(abbrev)
-            if token
+            tok = nil
+
+            token_def = TokenDictionary.fetch(abbrev)
+            if token_def
                 # We found it in the dictionary, so just return a Token based on it
-                return token
+                tok = PredefinedToken.new
+                tok.populate!(token_def)
+            elsif abbrev !~ /^%/
+                tok = StringToken.new
+                tok.populate!(abbrev)
+            elsif abbrev == "%%"
+                tok = StringToken.new
+                tok.populate!("%")
             elsif abbrev =~ /^%\{([A-Za-z0-9-]+)\}i/
                 # HTTP request header
-                return _reqheader_token(abbrev, $1)
+                tok = ReqheaderToken.new
+                tok.populate!($1)
             elsif abbrev =~ /^%\{(.*?):([^}]+)\}r/
                 # Arbitrary regex
-                return _regex_token(abbrev, $1, $2)
+                tok = RegexToken.new
+                tok.populate!($1, $2)
             end
 
-            raise "Unknown format token '#{abbrev}'"
-        end
-
-        # Returns a FormatToken subclass instance based on a static string.
-        #
-        # This element not be captured by the EntryParser since it's always the same.
-        def from_string(s)
-            StringToken.new(s)
-        end
-
-        # Returns a format element based on an HTTP header
-        def _reqheader_element(abbrev, header_name)
-            element = ReqheaderToken.new
-
-            element.name = _header_name_to_element_name(header_name)
-            element.abbrev = abbrev
-            element.regex = %q![^"]*!
-
-            element
-        end
-
-        # Returns a format element based on an arbitrary regex
-        def _regex_element(abbrev, regex_name, regex)
-            element = RegexToken.new
-
-            element.abbrev = abbrev
-            element.regex = regex
-            element.name = "regex_#{regex_name}".to_sym
-
-            element
-        end
-
-        # Lowercases header name and turns hyphens into underscores
-        def _header_name_to_element_name(header_name)
-            ("reqheader_" + header_name.downcase().gsub("-", "_")).to_sym
-        end
-    end
-
-    class ReqheaderTokenBuilder
-        def initialize(reqheader_token_cls=ReqheaderToken)
-            @_ReqheaderToken = reqheader_token_cls
-        end
-
-        def build(header_name, abbrev)
-            token_name = ("reqheader_" + header_name.downcase().gsub("-", "_")).to_sym
+            tok
         end
     end
 end

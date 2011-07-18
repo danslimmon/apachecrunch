@@ -30,19 +30,13 @@ class ApacheCrunch
 
     # Makes Entry instances based on log file text
     class EntryParser
-        # Initializes the instance given a LogFormat instance
-        def initialize(log_format, progress_meter)
-            @log_format = log_format
+        # Initializes the instance given a ProgressMeter instance
+        def initialize(progress_meter)
             @progress_meter = progress_meter
-
-            @_elements = log_format.captured_elements
-            @_derivation_map = log_format.derivation_map
         end
 
-        # Returns a log line hash built from a line of text, or nil if the line was malformatted
-        #
-        # The keys of the hash are names of FormatElements (e.g. "remote_host", "reqheader_referer")
-        def parse(log_text)
+        # Returns an Entry instance built from a line of text, or nil if the line was malformatted
+        def parse(format, log_text)
             match = (log_text =~ @log_format.regex)
             if match.nil?
                 warn "Log line did not match expected format: #{log_text}"

@@ -169,7 +169,7 @@ class ApacheCrunch
         # Returns the FormatToken subclass with the given abbreviation.
         #
         # If none exists, returns nil.
-        def self.fetch_by_abbrev(abbrev)
+        def self.fetch(abbrev)
             @@_defs.each do |token_def|
                 if token_def.abbrev == abbrev
                     return token_def
