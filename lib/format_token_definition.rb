@@ -1,4 +1,5 @@
 require 'cast'
+require 'derivation'
 
 class ApacheCrunch
     # Defines the properties of a known Apache log format token (like %q or %h)
@@ -12,7 +13,7 @@ class ApacheCrunch
         @abbrev = "%h"
         @regex = %q![A-Za-z0-9.-]+!
         @caster = nil
-        @derivation_rule = nil
+        @derivation_rule = NullDerivationRule.new
         @captured = true
     end
 
@@ -22,7 +23,7 @@ class ApacheCrunch
         @abbrev = "%l"
         @regex = %q!\S+!
         @caster = nil
-        @derivation_rule = nil
+        @derivation_rule = NullDerivationRule.new
         @captured = true
     end
 
@@ -32,7 +33,7 @@ class ApacheCrunch
         @abbrev = "%u"
         @regex = %q![^:]+!
         @caster = nil
-        @derivation_rule = nil
+        @derivation_rule = NullDerivationRule.new
         @captured = true
     end
 
@@ -62,7 +63,7 @@ class ApacheCrunch
         @abbrev = "%s"
         @regex = %q!\d+|-!
         @caster = nil
-        @derivation_rule = nil
+        @derivation_rule = NullDerivationRule.new
         @captured = true
     end
 
@@ -72,7 +73,7 @@ class ApacheCrunch
         @abbrev = "%b"
         @regex = %q!\d+!
         @caster = IntegerCast.new
-        @derivation_rule = nil
+        @derivation_rule = NullDerivationRule.new
         @captured = true
     end
 
@@ -82,7 +83,7 @@ class ApacheCrunch
         @abbrev = "%b"
         @regex = %q![\d-]+!
         @caster = CLFIntegerCast.new
-        @derivation_rule = nil
+        @derivation_rule = NullDerivationRule.new
         @captured = true
     end
 
@@ -92,7 +93,7 @@ class ApacheCrunch
         @abbrev = "%O"
         @regex = %q!\d+!
         @caster = IntegerCast.new
-        @derivation_rule = nil
+        @derivation_rule = NullDerivationRule.new
         @captured = true
     end
 
@@ -102,7 +103,7 @@ class ApacheCrunch
         @abbrev = "%D"
         @regex = %q!\d+!
         @caster = IntegerCast.new
-        @derivation_rule = nil
+        @derivation_rule = NullDerivationRule.new
         @captured = true
     end
 
@@ -112,7 +113,7 @@ class ApacheCrunch
         @abbrev = "%U"
         @regex = %q!/[^?]*!
         @caster = nil
-        @derivation_rule = nil
+        @derivation_rule = NullDerivationRule.new
         @captured = true
     end
 
@@ -122,7 +123,7 @@ class ApacheCrunch
         @abbrev = "%q"
         @regex = %q!\??\S*!
         @caster = nil
-        @derivation_rule = nil
+        @derivation_rule = NullDerivationRule.new
         @captured = true
     end
 
@@ -132,7 +133,7 @@ class ApacheCrunch
         @abbrev = "%m"
         @regex = %q![A-Z]+!
         @caster = nil
-        @derivation_rule = nil
+        @derivation_rule = NullDerivationRule.new
         @captured = true
     end
 
@@ -142,7 +143,7 @@ class ApacheCrunch
         @abbrev = "%H"
         @regex = %q!\S+!
         @caster = nil
-        @derivation_rule = nil
+        @derivation_rule = NullDerivationRule.new
         @captured = true
     end
 

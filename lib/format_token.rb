@@ -1,21 +1,21 @@
 require 'format_token_definition'
+require 'derivation'
 
 class ApacheCrunch
     # Abstract for a token in a log format
     class FormatToken
-        attr_accessor :token_definition
-
         # Performs whatever initial population is necessary for the token.
         def populate!; raise NotImplementedError; end
 
         def name; raise NotImplementedError; end
         def regex; raise NotImplementedError; end
         def captured?; raise NotImplementedError; end
+        def derivation_rule; raise NotImplementedError; end
     end
 
 
     # A predefined token like %q or %r from the Apache log.
-    class PredefinedToken
+    class PredefinedToken < FormatToken
         def populate!(token_definition)
             @token_definition = token_definition
         end
@@ -23,6 +23,7 @@ class ApacheCrunch
         def name; @token_definition.name; end
         def regex; @token_definition.regex; end
         def captured?; @token_definition.captured; end
+        def derivation_rule; @token_definition.derivation_rule; end
     end
 
 
@@ -42,6 +43,7 @@ class ApacheCrunch
         end
 
         def captured?; false; end
+        def derivation_rule; NullDerivationRule.new; end
     end
 
 
@@ -54,6 +56,7 @@ class ApacheCrunch
         def name; @_name; end
         def regex; '[^"]*'; end
         def captured?; true; end
+        def derivation_rule; NullDerivationRule.new; end
 
         # Lowercases header name and turns hyphens into underscores
         def _header_name_to_token_name(header_name)
@@ -72,6 +75,7 @@ class ApacheCrunch
         def name; @_name; end
         def regex; @_regex; end
         def captured?; true; end
+        def derivation_rule; NullDerivationRule.new; end
     end
 
 
