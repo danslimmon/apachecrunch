@@ -10,11 +10,7 @@ class ApacheCrunch
         def name; @token.name; end
 
         def derivation_rule
-            if @token.respond_to?(:token_definition)
-                return @token.token_definition.derivation_rule
-            else
-                return nil
-            end
+            @token.derivation_rule
         end
     end
 end

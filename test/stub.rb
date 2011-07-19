@@ -27,12 +27,8 @@ end
 class StubDerivationRule
 end
 
-class StubDerivationSourceTokenDefinition < ApacheCrunch::FormatTokenDefinition
-    def self.derivation_rule; StubDerivationRule.new; end
-end
-
 class StubDerivationSourceToken
-    def token_definition; StubDerivationSourceTokenDefinition; end
+    def derivation_rule; StubDerivationRule.new; end
 end
 
 class StubFormatTokenFactory
