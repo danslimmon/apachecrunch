@@ -33,7 +33,7 @@ class ApacheCrunch
         end
     end
 
-    class DerivedElementFetcher
+    class DerivedValueFetcher
         def fetch(entry, element_name)
             entry.captured_elements.each do |element|
                 dr = element.derivation_rule
