@@ -10,7 +10,15 @@ class ApacheCrunch
         #
         # Returns a hash mapping derived element name to derived value
         def derive_all(source_value)
+            raise NotImplementedError
         end
+    end
+
+
+    # Dummy rule that doesn't derive anything
+    class NullDerivationRule
+        def derived_elements; []; end
+        def derive_all; {}; end
     end
 
 
