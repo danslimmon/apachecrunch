@@ -6,26 +6,10 @@ class ApacheCrunch
     # Acts like a hash, in that you get at the log elements (e.g. "url_path", "remote_host") by
     # as entry[name].
     class Entry
+        attr_accessor :captured_elements
+
         def initialize(derivation_map)
-            @_derivation_map = derivation_map
-            @_attributes = {}
-        end
-
-        def []=(name, value)
-            @_attributes[name] = value
-        end
-
-        def [](name)
-            return @_attributes[name] if @_attributes.key?(name)
-
-            derived_from_cls = @_derivation_map[name]
-            return nil if derived_from_cls.nil?
-
-            derived_from_cls.derive(name, @_attributes[derived_from_cls.name])
-        end
-
-        def merge!(hsh)
-            @_attributes.merge!(hsh)
+            @captured_elements = []
         end
     end
 
@@ -33,10 +17,16 @@ class ApacheCrunch
     # Makes Entry instances based on log file text
     class EntryParser
         # Initializes the instance given a ProgressMeter instance
-        def initialize(format, progress_meter, entry_cls=Entry, element_cls=Element)
+        def initialize(format, progress_meter)
             @_format = format
             @_progress_meter = progress_meter
 
+            @_Entry = Entry
+            @_Element = Element
+        end
+
+        # Handles dependency injection
+        def dep_inject!(entry_cls, element_cls)
             @_Entry = entry_cls
             @_Element = element_cls
         end
