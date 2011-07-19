@@ -1,7 +1,7 @@
 class ApacheCrunch
     # Represents a particular Apache log format
     class Format
-        attr_accessor :format_def, :tokens
+        attr_accessor :tokens
 
         def initialize
             @tokens = []
@@ -63,7 +63,6 @@ class ApacheCrunch
         # Constructs and returns a Format instance based on the given Apache log format string
         def self.from_format_def(format_def)
             logformat = Format.new
-            logformat.format_def = format_def
 
             element_factory = LogFormatElementFactory.new
 

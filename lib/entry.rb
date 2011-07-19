@@ -1,4 +1,5 @@
 require 'element'
+require 'progress'
 
 class ApacheCrunch
     # A parsed entry from the log.
@@ -17,12 +18,11 @@ class ApacheCrunch
     # Makes Entry instances based on log file text
     class EntryParser
         # Initializes the instance given a ProgressMeter instance
-        def initialize(format, progress_meter)
-            @_format = format
-            @_progress_meter = progress_meter
-
+        def initialize
             @_Entry = Entry
             @_Element = Element
+            
+            @_progress_meter = NullProgressMeter.new
         end
 
         # Handles dependency injection
@@ -31,9 +31,17 @@ class ApacheCrunch
             @_Element = element_cls
         end
 
+        # Applies the given ProgressMeter to the parser so that it will output progress.
+        #
+        # The meter's output_progress method will get called every time we finish parsing
+        # a log entry.
+        def add_progress_meter!(meter)
+            @_progress_meter = meter
+        end
+
         # Returns an Entry instance built from a line of text, or nil if the line was malformatted
-        def parse(log_text)
-            @_regex = _build_regex(@_format) unless @_regex
+        def parse(format, log_text)
+            @_regex = _build_regex(format) unless @_regex
 
             match = (log_text =~ @_regex)
             if match.nil?
@@ -45,21 +53,21 @@ class ApacheCrunch
             match_groups.shift # First value is the whole matched string, which we do not want
 
             entry = @_Entry.new
-            @_format.tokens.each_with_index do |tok,i|
+            format.tokens.each_with_index do |tok,i|
                 if tok.captured?
-                    e = @_Element.new
-                    e.populate!(tok, match_groups[i])
-                    entry.add_element(e)
+                    element = @_Element.new
+                    element.populate!(tok, match_groups[i])
+                    entry.captured_elements << element
                 end
             end
 
-            @progress_meter.output_progress(entry)
+            @_progress_meter.output_progress(entry)
             entry
         end
 
         def _build_regex(format)
             r = "^"
-            @format.tokens.each do |tok|
+            format.tokens.each do |tok|
                 # We only care to remember the captured LogFormatElements.  No need to put
                 # parentheses around StringElements that aren't interpolated.
                 if tok.captured?
@@ -70,7 +78,7 @@ class ApacheCrunch
             end
             r += "$"
 
-            r
+            Regexp.compile(r)
         end
     end
 end

@@ -1,28 +1,26 @@
 class StubAlphanumericFormatToken < ApacheCrunch::FormatToken
     def name; :alnum; end
     def regex; %q![A-Za-z0-9]+!; end
+    def captured?; true; end
     def derivation_rule; ApacheCrunch::NullDerivationRule.new; end
 end
 
 class StubNumericFormatToken < ApacheCrunch::FormatToken
     def name; :num; end
     def regex; %q!\d+!; end
+    def captured?; true; end
     def derivation_rule; ApacheCrunch::NullDerivationRule.new; end
 end
 
-class StubStringToken < ApacheCrunch::FormatToken
-    @captured = false
-
-    def initialize(s)
-        @regex = s
-    end
+class StubStringFormatToken < ApacheCrunch::FormatToken
+    def initialize(s); @_s = s; end
+    def regex; @_s; end
+    def captured?; false; end
     def derivation_rule; ApacheCrunch::NullDerivationRule.new; end
 end
 
 class StubDerivedToken < ApacheCrunch::FormatToken
-    @abbrev = ""
     @name = :derived
-    @regex = %q!.*!
     def derivation_rule; ApacheCrunch::NullDerivationRule.new; end
 end
 
@@ -36,6 +34,7 @@ end
 class StubDerivationSourceToken
     def derivation_rule; StubDerivationRule.new; end
     def name; :derivation_source; end
+    def captured?; true; end
 end
 
 class StubFormatTokenFactory
@@ -48,16 +47,21 @@ class StubFormatTokenFactory
     end
 end
 
+class StubFormat
+    attr_accessor :tokens
+end
+
 class StubEntry
     attr_accessor :captured_elements
+    def initialize; @captured_elements = []; end
 end
 
 class StubElement
     attr_accessor :token, :value, :name, :derivation_rule
-    def initialize(token, value)
+    def populate!(token, value)
         @token = token
         @value = value
-        @name = @token.name
+        @name = token.name
         @derivation_rule = @token.derivation_rule
     end
 end

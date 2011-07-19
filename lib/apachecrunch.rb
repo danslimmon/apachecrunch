@@ -2,6 +2,7 @@ require "date"
 require "tempfile"
 
 require 'config'
+require 'progress'
 require 'entry'
 require 'format'
 require 'derivation'
