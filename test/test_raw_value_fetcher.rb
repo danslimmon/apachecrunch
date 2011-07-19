@@ -1,8 +1,8 @@
 require 'test/stub'
 
-class TestRawElementFetcher < Test::Unit::TestCase
+class TestRawValueFetcher < Test::Unit::TestCase
     def setup
-        @inst = ApacheCrunch::RawElementFetcher.new
+        @inst = ApacheCrunch::RawValueFetcher.new
     end
 
     def teardown
@@ -14,8 +14,8 @@ class TestRawElementFetcher < Test::Unit::TestCase
         entry = StubEntry.new
         entry.captured_elements = [StubElement.new(StubAlphanumericFormatToken.new, "foo123"),
                                    StubElement.new(StubNumericFormatToken.new, 54321)]
-        assert_equal("foo123", @inst.fetch(entry, StubAlphanumericFormatToken.new.name).value)
-        assert_equal(54321, @inst.fetch(entry, StubNumericFormatToken.new.name).value)
+        assert_equal("foo123", @inst.fetch(entry, StubAlphanumericFormatToken.new.name))
+        assert_equal(54321, @inst.fetch(entry, StubNumericFormatToken.new.name))
     end
 
     # Tests a fetch call for an element that's not there
