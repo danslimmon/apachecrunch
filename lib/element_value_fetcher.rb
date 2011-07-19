@@ -7,9 +7,9 @@ class ApacheCrunch
         end
 
         # Handles dependency injection
-        def dep_inject!(raw_value_fetcher, derived_value_fetcher)
-            @_RawValueFetcher = raw_value_fetcher
-            @_DerivedValueFetcher = derived_value_fetcher
+        def dep_inject!(raw_value_fetcher_cls, derived_value_fetcher_cls)
+            @_RawValueFetcher = raw_value_fetcher_cls
+            @_DerivedValueFetcher = derived_value_fetcher_cls
         end
 
         # Returns the value of the element with the given name from the Entry instance.
