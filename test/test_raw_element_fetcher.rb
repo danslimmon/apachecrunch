@@ -1,6 +1,6 @@
 require 'test/stub'
 
-class TestFormat < Test::Unit::TestCase
+class TestRawElementFetcher < Test::Unit::TestCase
     def setup
         @inst = ApacheCrunch::RawElementFetcher.new
     end
