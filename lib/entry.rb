@@ -1,3 +1,5 @@
+require 'element'
+
 class ApacheCrunch
     # A parsed entry from the log.
     #
@@ -31,54 +33,54 @@ class ApacheCrunch
     # Makes Entry instances based on log file text
     class EntryParser
         # Initializes the instance given a ProgressMeter instance
-        def initialize(progress_meter)
-            @progress_meter = progress_meter
+        def initialize(format, progress_meter, entry_cls=Entry, element_cls=Element)
+            @_format = format
+            @_progress_meter = progress_meter
+
+            @_Entry = entry_cls
+            @_Element = element_cls
         end
 
         # Returns an Entry instance built from a line of text, or nil if the line was malformatted
-        def parse(format, log_text)
-            match = (log_text =~ @log_format.regex)
+        def parse(log_text)
+            @_regex = _build_regex(@_format) unless @_regex
+
+            match = (log_text =~ @_regex)
             if match.nil?
-                warn "Log line did not match expected format: #{log_text}"
+                warn "Log line did not match expected format: #{log_text.rstrip}"
                 return nil
             end
-            
-            # Make a hash mapping all parsed elements to their values in the entry
+
             match_groups = Regexp.last_match.to_a
             match_groups.shift # First value is the whole matched string, which we do not want
-            element_values = Hash[*@_elements.zip(match_groups).flatten]
 
-            # Start building the return value
-            entry = Entry.new(@_derivation_map)
-            entry[:text] = log_text
-            # Insert all the elements specified in the LogFormat
-            entry.merge!(_elements_to_hash(element_values))
+            entry = @_Entry.new
+            @_format.tokens.each_with_index do |tok,i|
+                if tok.captured?
+                    e = @_Element.new
+                    e.populate!(tok, match_groups[i])
+                    entry.add_element(e)
+                end
+            end
 
             @progress_meter.output_progress(entry)
             entry
         end
 
-        # Returns a hash of "element name" => value pairs based on a hash of element => value pairs.
-        def _elements_to_hash(element_values)
-            hsh = {}
-            element_values.each_pair do |element, value|
-                hsh[element.name] = value
+        def _build_regex(format)
+            r = "^"
+            @format.tokens.each do |tok|
+                # We only care to remember the captured LogFormatElements.  No need to put
+                # parentheses around StringElements that aren't interpolated.
+                if tok.captured?
+                    r += "(" + tok.regex + ")"
+                else
+                    r += tok.regex
+                end
             end
+            r += "$"
 
-            hsh
-        end
-
-        # Returns hash of derived "element name" => value pairs from a hash of element => value pairs.
-        #
-        # That is, we go through the elements passed and if any offers derived elements, we include
-        # those in the return value.
-        def _derived_elements(element_values)
-            hsh = {}
-            element_values.each_pair do |element, value|
-                hsh.merge!(element.derived_values(value))
-            end
-
-            hsh
+            r
         end
     end
 end
