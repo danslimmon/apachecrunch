@@ -8,7 +8,7 @@ class ApacheCrunch
     class Entry
         attr_accessor :captured_elements
 
-        def initialize(derivation_map)
+        def initialize
             @captured_elements = []
         end
     end
