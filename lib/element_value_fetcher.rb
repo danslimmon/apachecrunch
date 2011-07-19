@@ -1,22 +1,25 @@
 class ApacheCrunch
+    # Finds a value from an Entry.  Value may be directly from log or derived.
     class ElementValueFetcher
-        def initialize(raw_value_fetcher_cls=RawValueFetcher,
-                       derived_value_fetcher_cls=DerivedValueFetcher)
-            @_RawValueFetcher = raw_value_fetcher_cls
-            @_DerivedValueFetcher = derived_value_fetcher_cls
+        def initialize
+            @_RawValueFetcher = RawValueFetcher
+            @_DerivedValueFetcher = DerivedValueFetcher
+        end
 
-            @_raw_fetcher = @_RawValueFetcher.new
-            @_derived_element_fetcher = @_DerivedValueFetcher.new
+        # Handles dependency injection
+        def dep_inject!(raw_value_fetcher, derived_value_fetcher)
+            @_RawValueFetcher = raw_value_fetcher
+            @_DerivedValueFetcher = derived_value_fetcher
         end
 
         # Returns the value of the element with the given name from the Entry instance.
         #
         # So element_name might be :minute or :reqheader_firstline for instance.
         def fetch(entry, element_name)
-            v = @_raw_fetcher.fetch(entry, element_name)
+            v = @_RawValueFetcher.new.fetch(entry, element_name)
             return v unless v.nil?
 
-            v = @_derived_fetcher.fetch(entry, element_name)
+            v = @_DerivedValueFetcher.new.fetch(entry, element_name)
             return v unless v.nil?
 
             nil

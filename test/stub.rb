@@ -61,3 +61,17 @@ class StubElement
         @derivation_rule = @token.derivation_rule
     end
 end
+
+class StubValueFetcher
+    def initialize(fetch_result); @fetch = fetch_result; end
+    def fetch(*args); @fetch; end
+end
+
+# Pretends to be a Raw- or DerivedValueFetcher class, but StubValueFetcher instance returned by
+# new() just fetches whatever you set fetch_result to.
+class StubValueFetcherClass
+    attr_accessor :fetch_result
+    def new(*args)
+        StubValueFetcher.new(@fetch_result)
+    end
+end
