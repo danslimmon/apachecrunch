@@ -5,56 +5,6 @@ class ApacheCrunch
 
         def initialize
             @tokens = []
-            @_regex = nil
-        end
-
-        # Appends a given token (a LogFormatElement subclass instance) to the tokens list
-        def append(token)
-            @tokens << token
-        end
-
-        # Returns a compiled regex to match a log line in this format
-        #
-        # Each group matched will correspond to an element in the log format.
-        def regex
-            return @_regex unless @_regex.nil?
-
-            r = "^"
-            @tokens.each do |tok|
-                # We only care to remember the captured LogFormatElements.  No need to put
-                # parentheses around StringElements that aren't interpolated.
-                if tok.captured
-                    r += "(" + tok.regex + ")"
-                else
-                    r += tok.regex
-                end
-            end
-            r += "$"
-
-            @_regex = Regexp.compile(r)
-            @_regex
-        end
-
-        # Returns the list of LogFormatElements, in order, of the interpolated things in the format.
-        #
-        # For example, if the log format definition were "%h %u %{Referer}i", this would return the
-        # LogFormatElement instances for "%h", "%u", and "%{Referer}i".
-        def captured_elements
-            @tokens.find_all do |tok|
-                tok.captured
-            end
-        end
-
-        # Returns hash mapping names of elements to the element class from which they are derived.
-        def derivation_map
-            hsh = {}
-            captured_elements.each do |tok|
-                tok.derived_elements.each do |derived_element|
-                    hsh[derived_element.name] = tok.class
-                end
-            end
-
-            hsh
         end
     end
 
