@@ -1,22 +1,13 @@
-class StubFormatToken < ApacheCrunch::FormatToken
-    @abbrev = "%z"
-    @name = :stub
-    @regex = %q!.*!
-    @captured = true
-end
-
 class StubAlphanumericFormatToken < ApacheCrunch::FormatToken
-    @abbrev = "%Z"
-    @name = :alnum
-    @regex = %q![A-Za-z0-9]+!
-    @captured = true
+    def name; :alnum; end
+    def regex; %q![A-Za-z0-9]+!; end
+    def derivation_rule; nil; end
 end
 
 class StubNumericFormatToken < ApacheCrunch::FormatToken
-    @abbrev = "%y"
-    @name = :num
-    @regex = %q!\d+!
-    @captured = true
+    def name; :num; end
+    def regex; %q!\d+!; end
+    def derivation_rule; nil; end
 end
 
 class StubStringToken < ApacheCrunch::FormatToken
@@ -33,21 +24,15 @@ class StubDerivedToken < ApacheCrunch::FormatToken
     @regex = %q!.*!
 end
 
-class StubDerivationSourceToken < ApacheCrunch::FormatToken
-    @name = :derivation_source
-    @captured = true
+class StubDerivationRule
+end
 
-    def derived_elements
-        [StubDerivedToken]
-    end
+class StubDerivationSourceTokenDefinition < ApacheCrunch::FormatTokenDefinition
+    def self.derivation_rule; StubDerivationRule.new; end
+end
 
-    def self.derive(name, our_own_value)
-        if name == :derived
-            return "derived from #{our_own_value}"
-        end
-
-        nil
-    end
+class StubDerivationSourceToken
+    def token_definition; StubDerivationSourceTokenDefinition; end
 end
 
 class StubFormatTokenFactory
@@ -57,5 +42,18 @@ class StubFormatTokenFactory
 
     def from_string(s)
         return StubStringToken.new(s)
+    end
+end
+
+class StubEntry
+    attr_accessor :captured_elements
+end
+
+class StubElement
+    attr_accessor :token, :value, :name
+    def initialize(token, value)
+        @token = token
+        @value = value
+        @name = @token.name
     end
 end
