@@ -24,6 +24,14 @@ class ApacheCrunch
 
     # Derivation rule for elements derived from TimeToken
     class TimeDerivationRule < DerivationRule
+        def initialize
+            @_derivation_regex = nil
+            @_month_map = {"Jan" => 1, "Feb" => 2, "Mar" => 3, "Apr" => 4,
+                           "May" => 5, "Jun" => 6, "Jul" => 7, "Aug" => 8,
+                           "Sep" => 9, "Oct" => 10, "Nov" => 11, "Dec" => 12}
+
+        end
+
         def derived_elements
             [:year, :month, :day, :hour, :minute, :second]
         end
@@ -31,12 +39,6 @@ class ApacheCrunch
         def derive_all(value)
             if @_derivation_regex.nil?
                 @_derivation_regex = Regexp.compile(%q!^\[(\d\d)/([A-Za-z]{3})/(\d\d\d\d):(\d\d):(\d\d):(\d\d)!)
-            end
-
-            if @_month_map.nil?
-                @_month_map = {"Jan" => 1, "Feb" => 2, "Mar" => 3, "Apr" => 4,
-                               "May" => 5, "Jun" => 6, "Jul" => 7, "Aug" => 8,
-                               "Sep" => 9, "Oct" => 10, "Nov" => 11, "Dec" => 12}
             end
 
             hsh = {}
@@ -55,21 +57,25 @@ class ApacheCrunch
     end
 
     class ReqFirstlineDerivationRule
+        def initialize
+            @_derivation_regex = nil
+        end
+
         def derived_elements
             return [:req_method, :url_path, :query_string, :protocol]
         end
 
         def derive_all(value)
             if @_derivation_regex.nil?
-                @_derivation_regex = Regexp.compile("^(#{ReqMethodToken.regex})\s+(#{UrlPathToken.regex})(#{QueryStringToken.regex})\s+(#{ProtocolToken.regex})$")
+                @_derivation_regex = Regexp.compile("^(#{ReqMethodTokenDefinition.regex})\s+(#{UrlPathTokenDefinition.regex})(#{QueryStringTokenDefinition.regex})\s+(#{ProtocolTokenDefinition.regex})$")
             end
 
             hsh = {}
             if value =~ @_derivation_regex
-                hsh[ReqMethodToken.name] = $1
-                hsh[UrlPathToken.name] = $2
-                hsh[QueryStringToken.name] = $3
-                hsh[ProtocolToken.name] = $4
+                hsh[ReqMethodTokenDefinition.name] = $1
+                hsh[UrlPathTokenDefinition.name] = $2
+                hsh[QueryStringTokenDefinition.name] = $3
+                hsh[ProtocolTokenDefinition.name] = $4
             end
 
             hsh
