@@ -1,13 +1,16 @@
+require 'element_value_fetcher'
+
 # Abstract for a procedure routine.
 class ProcedureRoutine
-    def initialize(log_parser)
+    def initialize(log_parser, value_fetcher)
         @_log_parser = log_parser
+        @_value_fetcher = value_fetcher
         @_current_entry = nil
     end
 
     # Allows blocks passed to a DSL routine to access parameters from the current log entry
     def method_missing(sym, *args)
-        @_current_entry[sym]
+        @_value_fetcher.fetch(name, sym)
     end
 
     # Executes the DSL routine using the given block
@@ -233,6 +236,7 @@ end
 class ProcedureEnvironment
     def initialize(log_parser)
         @_log_parser = log_parser
+        @_value_fetcher = ValueFetcher.new
     end
 
     # Evaluates the given string as a procedure in our DSL
@@ -242,7 +246,7 @@ class ProcedureEnvironment
 
     # DSL routine 'count_where'
     def count_where(&blk)
-        routine = CountWhere.new(@_log_parser)
+        routine = CountWhere.new(@_log_parser, @_value_fetcher)
         rv = routine.execute(&blk)
         routine.finish
         rv
@@ -250,7 +254,7 @@ class ProcedureEnvironment
 
     # DSL routine 'filter!'
     def filter!(&blk)
-        routine = Filter.new(@_log_parser)
+        routine = Filter.new(@_log_parser, @_value_fetcher)
         routine.execute(nil, true, &blk)
         routine.finish
         nil
@@ -258,7 +262,7 @@ class ProcedureEnvironment
 
     # DSL routine 'filter'
     def filter(target_path=nil, &blk)
-        routine = Filter.new(@_log_parser)
+        routine = Filter.new(@_log_parser, @_value_fetcher)
         routine.execute(target_path, &blk)
         routine.finish
         nil
@@ -266,7 +270,7 @@ class ProcedureEnvironment
 
     # DSL routine 'each'
     def each(&blk)
-        routine = Each.new(@_log_parser)
+        routine = Each.new(@_log_parser, @_value_fetcher)
         routine.execute(&blk)
         routine.finish
         nil
@@ -274,7 +278,7 @@ class ProcedureEnvironment
 
     # DSL routine 'count_by'
     def count_by(&blk)
-        routine = CountBy.new(@_log_parser)
+        routine = CountBy.new(@_log_parser, @_value_fetcher)
         rv = routine.execute(&blk)
         routine.finish
         rv
@@ -282,7 +286,7 @@ class ProcedureEnvironment
 
     # DSL routine 'distribution'
     def distribution(bucket_width, &blk)
-        routine = Distribution.new(@_log_parser)
+        routine = Distribution.new(@_log_parser, @_value_fetcher)
         rv = routine.execute(bucket_width, &blk)
         routine.finish
         rv
@@ -290,7 +294,7 @@ class ProcedureEnvironment
 
     # DSL routine 'log_distribution'
     def log_distribution(width_base, &blk)
-        routine = LogDistribution.new(@_log_parser)
+        routine = LogDistribution.new(@_log_parser, @_value_fetcher)
         rv = routine.execute(width_base, &blk)
         routine.finish
         rv
@@ -298,7 +302,7 @@ class ProcedureEnvironment
 
     # DSL routine 'confidence_interval'
     def confidence_interval(confidence, &blk)
-        routine = ConfidenceInterval.new(@_log_parser)
+        routine = ConfidenceInterval.new(@_log_parser, @_value_fetcher)
         rv = routine.execute(confidence, &blk)
         routine.finish
         rv
@@ -306,7 +310,7 @@ class ProcedureEnvironment
 
     # DSL routine 'most_common'
     def most_common(n, &blk)
-        routine = MostCommon.new(@_log_parser)
+        routine = MostCommon.new(@_log_parser, @_value_fetcher)
         rv = routine.execute(n, &blk)
         routine.finish
         rv
