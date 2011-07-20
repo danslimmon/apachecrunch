@@ -76,6 +76,7 @@ class TestLogParser < Test::Unit::TestCase
         log_file.lines = ["a\n", "b\n", "c\n", "d\n"]
 
         @inst.set_file!(log_file)
+        @inst.set_format!(StubFormat.new)
         assert_instance_of(StubEntry, @inst.next_entry,
                            "#{@inst.class}#next_entry returned wrong type of thing")
         assert_instance_of(StubEntry, @inst.next_entry,
