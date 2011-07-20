@@ -1,3 +1,5 @@
+require 'test/stub'
+
 class MockFile
     attr_accessor :gets, :path, :close_count, :lines
     def initialize
@@ -20,4 +22,16 @@ class MockFileClass
     end
     def rename(*args); @rename_calls << args; end
     def open(*args); @open_calls << args; end
+end
+
+# Pretends to be a FormatTokenFactory class but just logs what it's asked to do
+class MockFormatTokenFactoryClass
+    attr_accessor :from_abbrev_calls
+    def initialize
+        @from_abbrev_calls = []
+    end
+    def from_abbrev(*args)
+        @from_abbrev_calls << args
+        StubAlphanumericFormatToken.new
+    end
 end

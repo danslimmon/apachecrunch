@@ -1,3 +1,5 @@
+require 'format_token'
+
 class ApacheCrunch
     # Represents a particular Apache log format
     class Format
@@ -13,8 +15,13 @@ class ApacheCrunch
         # Initializes the FormatParser
         #
         # Takes a FormatElementFactory instance.
-        def initialize(format_element_factory)
-            @_element_factory = format_element_factory
+        def initialize
+            @_FormatTokenFactory = FormatTokenFactory
+        end
+
+        # Handles dependency injection
+        def dep_inject!(format_token_factory_cls)
+            @_FormatTokenFactory = format_token_factory_cls
         end
 
         # Parses the given format_def (e.g. "%h %u %s #{Referer}i") and returns a list of tokens.
@@ -39,20 +46,20 @@ class ApacheCrunch
         def _shift_token(format_def)
             if format_def =~ /^%%(.*)/
                 # Literal "%"
-                return [@_element_factory.from_string("%%"), $1]
+                return [@_FormatTokenFactory.from_abbrev("%%"), $1]
             elsif format_def =~ /^(%[A-Za-z])(.*)/
                 # Simple element (e.g. "%h", "%u")
-                return [@_element_factory.from_abbrev($1), $2]
+                return [@_FormatTokenFactory.from_abbrev($1), $2]
             elsif format_def =~ /^%[<>]([A-Za-z])(.*)/
                 # No idea how to handle mod_log_config's "which request" system yet, so we
                 # ignore it.
-                return [@_element_factory.from_abbrev("%" + $1), $2]
+                return [@_FormatTokenFactory.from_abbrev("%" + $1), $2]
             elsif format_def =~ /^(%\{.+?\}[Ceinor])(.*)/
                 # "Contents of" element (e.g. "%{Accept}i")
-                return [@_element_factory.from_abbrev($1), $2]
+                return [@_FormatTokenFactory.from_abbrev($1), $2]
             elsif format_def =~ /^(.+?)(%.*|$)/
                 # Bare string up until the next %, or up until the end of the format definition
-                return [@_element_factory.from_string($1), $2]
+                return [@_FormatTokenFactory.from_abbrev($1), $2]
             end
         end
     end

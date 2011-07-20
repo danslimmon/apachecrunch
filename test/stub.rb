@@ -41,10 +41,6 @@ class StubFormatTokenFactory
     def from_abbrev(abbrev)
         return StubFormatToken.new
     end
-
-    def from_string(s)
-        return StubStringToken.new(s)
-    end
 end
 
 class StubFormat
