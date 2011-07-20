@@ -2,25 +2,25 @@ class ApacheCrunch
     # Parses a log file given a path and a Format instance
     class LogParser
         # Initializes the parser with the path to a log file and a EntryParser.
-        def initialize(path, entry_parser, file_cls=File)
-            @path = path
-            @entry_parser = entry_parser
+        def initialize(entry_parser)
+            @_entry_parser = entry_parser
+            @_log_file = nil
 
-            @_file_cls = file_cls
-            @_file = nil
+            @_File = File
         end
 
-        # Returns the next entry in the log file as a hash, or nil if we've reached EOF.
-        #
-        # The keys of the hash are names of LogFormatElements (e.g. :remote_host, 
-        # :reqheader_referer)
+        # Handles dependency injection
+        def dep_inject!(file_cls)
+            @_File = file_cls
+        end
+
+        # Returns the next parsed line in the log file as an Entry, or nil if we've reached EOF.
         def next_entry
-            @_file = @_file_cls.open(@path) if @_file.nil?
-
-            while line_text = @_file.gets
+            while line_text = @_log_file.gets
+                # This is if we've reached EOF:
                 return nil if line_text.nil?
-                entry = @entry_parser.parse(line_text)
 
+                entry = @_entry_parser.parse(@_format, line_text)
                 # The EntryParser returns nil and writes a warning if the line text doesn't
                 # match our expected format.
                 next if entry.nil?
@@ -30,26 +30,30 @@ class ApacheCrunch
         end
 
         # Resets the LogParser's filehandle so we can start over.
-        def reset
-            @_file = nil
+        def reset_file!
+            @_log_file.close
+            @_log_file = @_File.open(@_log_file.path)
         end
 
-        # Makes the LogParser close its current log file and start parsing a new one instead
+        # Makes the LogParser start parsing a new log file
         #
         # `new_target` is a writable file object that the parser should start parsing, and if
-        # in_place is true, we actually replace the contents of the current target with those
+        # `in_place` is true, we actually replace the contents of the current target with those
         # of the new target.
-        def replace_target(new_target, in_place)
-            new_target.close
+        def set_file!(new_file)
+            @_log_file.close unless @_log_file.nil?
+            @_log_file = new_file
+        end
 
-            if in_place
-                old_path = @_file.path
-                @_file_cls.rename(new_target.path, old_path)
-            else
-                @path = new_target.path
-            end
+        # Replaces the LogParser current file with another. Like, for real, on the filesystem.
+        def replace_file!(new_file)
+            @_log_file.close
+            @_File.rename(new_file.path, @_log_file.path)
+            @_log_file = @_File.open(@_log_file.path)
+        end
 
-            @_file = nil
+        def set_format!(format)
+            @_format = format
         end
     end
 
@@ -64,11 +68,14 @@ class ApacheCrunch
             # First we generate a Format instance based on the format definition we were given
             log_format = FormatFactory.from_format_def(format_def)
 
-            # Now we generate a line parser
-            log_line_parser = EntryParser.new(log_format, progress_meter)
+            # Now we generate a parser for the individual entries
+            entry_parser = EntryParser.new
+            entry_parser.add_progress_meter!(progress_meter)
 
             # And now we can instantiate and return a LogParser
-            return LogParser.new(path, log_line_parser)
+            log_parser = LogParser.new(entry_parser)
+            log_parser.set_file!(open(path, "r"))
+            log_parser.set_format!(log_format)
         end
     end
 end

@@ -68,7 +68,13 @@ class Filter < ProcedureRoutine
     end
 
     def finish
-        @_log_parser.replace_target(@_results_file, @_in_place)
+        @_results_file.close
+        @_results_file = open(@_results_file.path)
+        if @_in_place
+            @_log_parser.replace_file!(@_results_file)
+        else
+            @_log_parser.set_file!(@_results_file)
+        end
     end
 
     # Returns a writable file object to which the results of the filter should be written.

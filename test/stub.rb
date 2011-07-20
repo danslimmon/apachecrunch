@@ -79,3 +79,10 @@ class StubValueFetcherClass
         StubValueFetcher.new(@fetch_result)
     end
 end
+
+class StubEntryParser
+    def parse_return_values=(value_list)
+        @_parse_return_values = value_list.clone
+    end
+    def parse(format, log_text); @_parse_return_values.shift; end
+end
