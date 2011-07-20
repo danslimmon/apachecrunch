@@ -35,6 +35,7 @@ class ApacheCrunch
             @_Element = Element
             
             @_progress_meter = NullProgressMeter.new
+            @_regex = nil
         end
 
         # Handles dependency injection
@@ -53,7 +54,7 @@ class ApacheCrunch
 
         # Returns an Entry instance built from a line of text, or nil if the line was malformatted
         def parse(format, log_text)
-            @_regex = _build_regex(format) unless @_regex
+            @_regex = _build_regex(format) if @_regex.nil?
 
             match = (log_text =~ @_regex)
             if match.nil?
