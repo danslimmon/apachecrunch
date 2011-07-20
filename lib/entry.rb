@@ -11,6 +11,18 @@ class ApacheCrunch
 
         def initialize
             @captured_elements = []
+            @_value_fetcher = nil
+
+            @_ElementValueFetcher = ElementValueFetcher
+        end
+
+        def dep_inject!(element_value_fetcher_cls)
+            @_ElementValueFetcher = element_value-fetcher_cls
+        end
+
+        def fetch(name)
+            @_value_fetcher = @_ElementValueFetcher.new if @_value_fetcher.nil?
+            @_value_fetcher.fetch(self, name)
         end
     end
 
@@ -53,12 +65,10 @@ class ApacheCrunch
             match_groups.shift # First value is the whole matched string, which we do not want
 
             entry = @_Entry.new
-            format.tokens.each_with_index do |tok,i|
-                if tok.captured?
-                    element = @_Element.new
-                    element.populate!(tok, match_groups[i])
-                    entry.captured_elements << element
-                end
+            format.captured_tokens.each_with_index do |tok,i|
+                element = @_Element.new
+                element.populate!(tok, match_groups[i])
+                entry.captured_elements << element
             end
 
             @_progress_meter.output_progress(entry)

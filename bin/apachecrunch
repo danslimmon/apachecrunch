@@ -66,5 +66,5 @@ log_parser = ApacheCrunch::LogParserFactory.log_parser(
                         format_def,
                         options[:logfile],
                         progress_meter)
-proc_env = ProcedureEnvironment.new(log_parser)
+proc_env = ApacheCrunch::ProcedureEnvironment.new(log_parser)
 proc_env.eval_procedure(open(options[:procedure]).read())

@@ -8,6 +8,12 @@ class ApacheCrunch
         def initialize
             @tokens = []
         end
+
+        def captured_tokens
+            @tokens.find_all do |tok|
+                tok.captured?
+            end
+        end
     end
 
     # Parses a log format definition
@@ -71,9 +77,7 @@ class ApacheCrunch
         def self.from_format_def(format_def)
             logformat = Format.new
 
-            element_factory = LogFormatElementFactory.new
-
-            format_parser = FormatParser.new(element_factory)
+            format_parser = FormatParser.new
             logformat.tokens = format_parser.parse_def(format_def)
 
             logformat

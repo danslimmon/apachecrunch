@@ -37,12 +37,6 @@ class StubDerivationSourceToken
     def captured?; true; end
 end
 
-class StubFormatTokenFactory
-    def from_abbrev(abbrev)
-        return StubFormatToken.new
-    end
-end
-
 class StubFormat
     attr_accessor :tokens
 end

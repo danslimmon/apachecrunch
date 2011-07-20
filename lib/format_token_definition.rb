@@ -149,7 +149,7 @@ class ApacheCrunch
 
 
     # Finds log format elements given information about them.
-    class ElementDictionary
+    class TokenDictionary
         @@_defs = [
                 RemoteHostTokenDefinition,
                 LogNameTokenDefinition,

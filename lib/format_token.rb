@@ -85,8 +85,6 @@ class ApacheCrunch
     class FormatTokenFactory
         # Takes an Apache log format abbreviation and returns a corresponding FormatToken
         def self.from_abbrev(abbrev)
-            tok = nil
-
             token_def = TokenDictionary.fetch(abbrev)
             if token_def
                 # We found it in the dictionary, so just return a Token based on it
@@ -106,6 +104,8 @@ class ApacheCrunch
                 # Arbitrary regex
                 tok = RegexToken.new
                 tok.populate!($1, $2)
+            else
+                raise "Unable to parse format definition starting at '#{abbrev}'"
             end
 
             tok

@@ -76,6 +76,7 @@ class ApacheCrunch
             log_parser = LogParser.new(entry_parser)
             log_parser.set_file!(open(path, "r"))
             log_parser.set_format!(log_format)
+            log_parser
         end
     end
 end
