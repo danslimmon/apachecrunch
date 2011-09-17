@@ -67,8 +67,15 @@ class ApacheCrunch
 
             entry = @_Entry.new
             format.captured_tokens.each_with_index do |tok,i|
-                 entry.captured_elements[tok.name] = match_groups[i]
+                 element = Element.new
+                 element.populate!(tok, match_groups[i])
+                 entry.captured_elements[tok.name] = element
             end
+
+            # Add the full text of the log entry to the Entry instance as well.
+            text_element = Element.new
+            text_element.populate!(StringToken.new, log_text)
+            entry.captured_elements[:text] = text_element
 
             @_progress_meter.output_progress(entry)
             entry
