@@ -3,10 +3,13 @@ require 'test/stub'
 class TestEntryParser < Test::Unit::TestCase
     def setup
         @inst = ApacheCrunch::EntryParser.new
+
         @format = StubFormat.new
-        @format.tokens = [StubAlphanumericFormatToken.new,
-                          StubStringFormatToken.new(" stuff "),
-                          StubNumericFormatToken.new]
+        alnum_token = StubAlphanumericFormatToken.new
+        string_token = StubStringFormatToken.new(" stuff ")
+        num_token = StubNumericFormatToken.new
+        @format.tokens = [alnum_token, string_token, num_token]
+        @format.captured_tokens = [alnum_token, num_token]
     end
 
     def teardown

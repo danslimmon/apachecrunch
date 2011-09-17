@@ -46,12 +46,12 @@ class StubDerivationSourceToken
 end
 
 class StubFormat
-    attr_accessor :tokens
+    attr_accessor :tokens, :captured_tokens
 end
 
 class StubEntry
     attr_accessor :captured_elements
-    def initialize; @captured_elements = []; end
+    def initialize; @captured_elements = {}; end
 end
 
 class StubElement
