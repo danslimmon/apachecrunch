@@ -17,7 +17,7 @@ class TestRawValueFetcher < Test::Unit::TestCase
         num_element = StubElement.new
         num_element.populate!(StubNumericFormatToken.new, 54321)
 
-        entry.captured_elements = [alnum_element, num_element]
+        entry.captured_elements = {:alnum => alnum_element, :num => num_element}
         assert_equal("foo123", @inst.fetch(entry, StubAlphanumericFormatToken.new.name))
         assert_equal(54321, @inst.fetch(entry, StubNumericFormatToken.new.name))
     end
