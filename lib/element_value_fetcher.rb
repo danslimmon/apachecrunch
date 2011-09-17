@@ -34,28 +34,37 @@ class ApacheCrunch
         # Only works for elements based on tokens that we parsed directly into the Entry.  If no
         # matching element is found, we return nil.
         def fetch(entry, element_name)
-            matching_element = entry.captured_elements.find do |element|
-                element_name == element.name
-            end
-
-            matching_element ? matching_element.value : nil
+            entry.captured_elements[element_name]
         end
     end
 
 
     # Returns the value of an element derived from one captured directly from the log.
     class DerivedValueFetcher
+        def initialize
+            @_DerivationRuleFinder = DerivationRuleFinder
+        end
+
+        # Handles dependency injection
+        def dep_inject!(derivation_rule_finder_cls)
+            @_DerivationRuleFinder = derivation_rule_finder_cls
+        end
+
         # Returns the value for the given name by deriving from an Element in the Entry.
         #
         # Returns nil if no such value can be derived.
         def fetch(entry, element_name)
-            source_element = entry.captured_elements.find do |element|
-                element.derivation_rule.derived_elements.include?(element_name)
-            end
+            # Find the derivation rule that will get us the element we want
+            rule = @_DerivationRuleFinder.find(element_name)
+            return nil if rule.nil?
+            
+            # Get the value of the element from which we're deriving
+            source_element_name = rule.source_name
+            source_element = entry.captured_elements[source_element_name]
             return nil if source_element.nil?
 
-            derived_elements = source_element.derivation_rule.derive_all(source_element.value)
-            derived_elements[element_name]
+            # Do the derivation
+            rule.derive(element_name, source_element.value)
         end
     end
 end

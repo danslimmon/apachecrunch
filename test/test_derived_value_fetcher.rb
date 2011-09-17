@@ -17,7 +17,8 @@ class TestDerivedValueFetcher < Test::Unit::TestCase
         ds_element = StubElement.new
         ds_element.populate!(StubDerivationSourceToken.new, "herpaderp")
 
-        entry.captured_elements = [alnum_element, ds_element]
+        @inst.dep_inject!(StubDerivationRuleFinder.new(StubDerivationRule.new))
+        entry.captured_elements = {:alnum => alnum_element, :derivation_source => ds_element}
         assert_equal("derived from herpaderp", @inst.fetch(entry, :derived))
     end
 

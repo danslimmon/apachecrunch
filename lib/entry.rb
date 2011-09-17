@@ -10,7 +10,7 @@ class ApacheCrunch
         attr_accessor :captured_elements
 
         def initialize
-            @captured_elements = []
+            @captured_elements = {}
             @_value_fetcher = nil
 
             @_ElementValueFetcher = ElementValueFetcher
@@ -67,9 +67,7 @@ class ApacheCrunch
 
             entry = @_Entry.new
             format.captured_tokens.each_with_index do |tok,i|
-                element = @_Element.new
-                element.populate!(tok, match_groups[i])
-                entry.captured_elements << element
+                 entry.captured_elements[tok.name] = match_groups[i]
             end
 
             @_progress_meter.output_progress(entry)

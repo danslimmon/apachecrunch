@@ -25,10 +25,18 @@ class StubDerivedToken < ApacheCrunch::FormatToken
 end
 
 class StubDerivationRule
-    def derived_elements; [:derived]; end
-    def derive_all(value)
-        {:derived => "derived from #{value}"}
+    def source_name; :derivation_source; end
+    def target_names; [:derived]; end
+    def derive(name, source_value)
+        "derived from #{source_value}"
     end
+end
+
+# Pretends to be the DerivationRuleFinder class, but find() always returns the value it was
+# initialized with
+class StubDerivationRuleFinder
+    def initialize(rule); @_rule = rule; end
+    def find(element_name); return @_rule; end
 end
 
 class StubDerivationSourceToken

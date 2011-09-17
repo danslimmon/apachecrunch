@@ -1,15 +1,13 @@
 class ApacheCrunch
     # Abstract for classes that define how to obtain a given element from the value of another.
     class DerivationRule
-        # Returns the names of all elements that can be derived with this rule
-        def derived_elements
+        # Returns the name of the element from which this rule derives values
+        def source_name
             raise NotImplementedError
         end
 
-        # Derives all derivable elements from the given string value
-        #
-        # Returns a hash mapping derived element name to derived value
-        def derive_all(source_value)
+        # Derives the given derivable element from the given element value
+        def derive(name, source_value)
             raise NotImplementedError
         end
     end
@@ -17,8 +15,9 @@ class ApacheCrunch
 
     # Dummy rule that doesn't derive anything
     class NullDerivationRule
-        def derived_elements; []; end
-        def derive_all; {}; end
+        def source_name; nil; end
+        def target_names; []; end
+        def derive(name, source_value); nil; end
     end
 
 
@@ -29,20 +28,23 @@ class ApacheCrunch
             @_month_map = {"Jan" => 1, "Feb" => 2, "Mar" => 3, "Apr" => 4,
                            "May" => 5, "Jun" => 6, "Jul" => 7, "Aug" => 8,
                            "Sep" => 9, "Oct" => 10, "Nov" => 11, "Dec" => 12}
-
         end
 
-        def derived_elements
+        def source_name
+            :time
+        end
+
+        def target_names
             [:year, :month, :day, :hour, :minute, :second]
         end
 
-        def derive_all(value)
+        def derive(name, source_value)
             if @_derivation_regex.nil?
                 @_derivation_regex = Regexp.compile(%q!^\[(\d\d)/([A-Za-z]{3})/(\d\d\d\d):(\d\d):(\d\d):(\d\d)!)
             end
 
             hsh = {}
-            if value =~ @_derivation_regex
+            if source_value =~ @_derivation_regex
                 hsh[:year] = $3.to_i
                 hsh[:month] = @_month_map[$2]
                 hsh[:day] = $1.to_i
@@ -52,7 +54,7 @@ class ApacheCrunch
                 hsh[:second] = $6.to_i
             end
 
-            hsh
+            hsh[name]
         end
     end
 
@@ -61,21 +63,48 @@ class ApacheCrunch
             @_derivation_regex = nil
         end
 
-        def derived_elements
-            return [:req_method, :url_path, :query_string, :protocol]
+        def source_name
+            :req_firstline
         end
 
-        def derive_all(value)
+        def target_names
+            [ReqMethodTokenDefinition.name, UrlPathTokenDefinition.name, QueryStringTokenDefinition.name, ProtocolTokenDefinition.name]
+        end
+
+        def derive(name, source_value)
             if @_derivation_regex.nil?
                 @_derivation_regex = Regexp.compile("^(#{ReqMethodTokenDefinition.regex})\s+(#{UrlPathTokenDefinition.regex})(#{QueryStringTokenDefinition.regex})\s+(#{ProtocolTokenDefinition.regex})$")
             end
 
             hsh = {}
-            if value =~ @_derivation_regex
+            if source_value =~ @_derivation_regex
                 hsh[ReqMethodTokenDefinition.name] = $1
                 hsh[UrlPathTokenDefinition.name] = $2
                 hsh[QueryStringTokenDefinition.name] = $3
                 hsh[ProtocolTokenDefinition.name] = $4
+            end
+
+            hsh[name]
+        end
+    end
+
+    class DerivationRuleFinder
+        @_rule_map = nil
+        @_rules = [NullDerivationRule, TimeDerivationRule, ReqFirstlineDerivationRule]
+
+        # Returns a derivation rule that derives element with the given name
+        def self.find(element_name)
+            @_rule_map = self._build_rule_map if @_rule_map.nil?
+            @_rule_map[element_name]
+        end
+
+        def self._build_rule_map
+            hsh = {}
+            @_rules.each do |rule_cls|
+                r = rule_cls.new
+                r.target_names.each do |target_element|
+                    hsh[target_element] = r
+                end
             end
 
             hsh
