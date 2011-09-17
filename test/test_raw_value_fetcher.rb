@@ -30,7 +30,7 @@ class TestRawValueFetcher < Test::Unit::TestCase
         num_element = StubElement.new
         num_element.populate!(StubNumericFormatToken.new, 54321)
 
-        entry.captured_elements = [alnum_element, num_element]
+        entry.captured_elements = {:alnum => alnum_element, :num => num_element}
         assert_nil(@inst.fetch(entry, :missing_element))
     end
 end

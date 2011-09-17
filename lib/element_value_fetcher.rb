@@ -34,7 +34,9 @@ class ApacheCrunch
         # Only works for elements based on tokens that we parsed directly into the Entry.  If no
         # matching element is found, we return nil.
         def fetch(entry, element_name)
-            entry.captured_elements[element_name].value
+            element = entry.captured_elements[element_name]
+            return nil if element.nil?
+            element.value
         end
     end
 
