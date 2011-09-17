@@ -9,8 +9,8 @@ class TestReqFirstlineDerivationRule < Test::Unit::TestCase
         @inst = nil
     end
 
-    def test_derived_elements
-        expected_names = @inst.derived_elements
+    def test_derive
+        expected_names = @inst.target_names
         datasets = [
             ["GET / HTTP/1.1", {:req_method => "GET",
                                 :url_path => "/",
@@ -26,21 +26,15 @@ class TestReqFirstlineDerivationRule < Test::Unit::TestCase
                                                       :protocol => "HTTP/1.1"}]
         ]
 
-        expected_names = @inst.derived_elements
+        expected_names = @inst.target_names
         datasets.each do |ds|
             firstline_value = ds[0]
             expected_values = ds[1]
-            result = @inst.derive_all(firstline_value)
 
+            expected_names = [:req_method, :url_path, :query_string, :protocol]
             expected_names.each do |name|
-                assert(result.key?(name),
-                       "#{@inst.class}#derive_all is missing one or more elements")
-            end
-
-
-            expected_names.each do |name|
-                assert_equal(expected_values[name], result[name],
-                             "#{@inst.class}#derive_all returned wrong value for element #{name}")
+                assert_equal(expected_values[name], @inst.derive(name, firstline_value),
+                             "#{@inst.class}#derive returned wrong value for element '#{name}'")
             end
         end
     end
