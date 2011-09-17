@@ -10,15 +10,8 @@ class TestTimeDerivationRule < Test::Unit::TestCase
     end
 
     # Tests that the expected list of derived elements matches what actually gets derived
-    def test_derived_elements
-        expected_names = @inst.derived_elements
-        result = @inst.derive_all("[15/Jul/2011:09:55:41 +0400]")
-
-        expected_names.each do |name|
-            assert(result.key?(name),
-                   "#{@inst.class}#derive_all is missing one or more elements")
-        end
-
+    def test_derive
+        expected_names = [:year, :month, :day, :hour, :minute, :second]
         expected_values = {
             :year => 2011,
             :month => 7,
@@ -29,7 +22,7 @@ class TestTimeDerivationRule < Test::Unit::TestCase
         }
 
         expected_names.each do |name|
-            assert_equal(result[name], expected_values[name],
+            assert_equal(expected_values[name], @inst.derive(name, "[15/Jul/2011:09:55:41 +0400]"),
                          "#{@inst.class}#derive_all returned incorrect value for element #{name}")
         end
     end
