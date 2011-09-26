@@ -52,6 +52,22 @@ class ApacheCrunch
     end
 
 
+    # DSL routine that calculates the sum of the quantities given by the block
+    #
+    # All values produced by the block must have a to_f method, and this routine
+    # returns a float.
+    class Sum < ProcedureRoutine
+        def execute(&blk)
+            rslt = 0.0
+            while @_current_entry = @_log_parser.next_entry
+                rslt += instance_eval(&blk).to_f
+            end
+
+            rslt
+        end
+    end
+
+
     # DSL routine(s) that filter(s) for entries for which the given block evaluates to true
     #
     # This can be called as 'filter()', which means the filtering happens in a temporary file, or
@@ -191,8 +207,8 @@ class ApacheCrunch
     #         time_to_serve
     #     end
     #
-    # would return two numbers, the lower and upper bound of a 95% confidence interval for the values
-    # of time_to_serve.
+    # would return two numbers, the lower and upper bound of a 95% confidence interval for the
+    # values of time_to_serve.
     class ConfidenceInterval < ProcedureRoutine
         def execute(confidence, &blk)
             # Build a list of all the values found
@@ -273,6 +289,14 @@ class ApacheCrunch
             routine.execute(&blk)
             routine.finish
             nil
+        end
+
+        # DSL routine 'sum'
+        def sum(&blk)
+            routine = Sum.new(@_log_parser)
+            rslt = routine.execute(&blk)
+            routine.finish
+            rslt
         end
 
         # DSL routine 'count_by'
