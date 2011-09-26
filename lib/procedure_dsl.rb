@@ -209,12 +209,15 @@ class ApacheCrunch
     #
     # would return two numbers, the lower and upper bound of a 95% confidence interval for the
     # values of time_to_serve.
+    #
+    # This routine returns a float, and the block must always evaluate to something with a to_f
+    # method.
     class ConfidenceInterval < ProcedureRoutine
         def execute(confidence, &blk)
             # Build a list of all the values found
             values = []
             while @_current_entry = @_log_parser.next_entry
-                values << instance_eval(&blk)
+                values << instance_eval(&blk).to_f
             end
             values.sort!
 
@@ -223,6 +226,26 @@ class ApacheCrunch
 
             # Find the bounds of the confidence interval
             return values[count_outside / 2], values[-count_outside / 2]
+        end
+    end
+
+
+    # DSL routine that determines the nth percentile for the values to which the block evaluates
+    #
+    # This routine returns a float, and the block must always evaluate to something with a to_f
+    # method.
+    class Percentile < ProcedureRoutine
+        def execute(n, &blk)
+            # Build a list of all the values found
+            values = []
+            while @_current_entry = @_log_parser.next_entry
+                values << instance_eval(&blk).to_f
+            end
+            values.sort!
+
+            puts "values.length: #{values.length}"
+            puts "n/100.0*values.length: #{n/100.0*values.length}"
+            return values[((n/100.0)*values.length).to_i]
         end
     end
 
@@ -294,9 +317,9 @@ class ApacheCrunch
         # DSL routine 'sum'
         def sum(&blk)
             routine = Sum.new(@_log_parser)
-            rslt = routine.execute(&blk)
+            rv = routine.execute(&blk)
             routine.finish
-            rslt
+            rv
         end
 
         # DSL routine 'count_by'
@@ -327,6 +350,14 @@ class ApacheCrunch
         def confidence_interval(confidence, &blk)
             routine = ConfidenceInterval.new(@_log_parser)
             rv = routine.execute(confidence, &blk)
+            routine.finish
+            rv
+        end
+
+        # DSL routine 'percentile'
+        def percentile(n, &blk)
+            routine = Percentile.new(@_log_parser)
+            rv = routine.execute(n, &blk)
             routine.finish
             rv
         end
